@@ -3,6 +3,8 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.models.inventory import Category, Material, FinishedProduct, StockTransaction
+from app.services.notification_service import NotificationService
+
 from app.schemas.inventory import (
     CategoryCreate,
     MaterialCreate, MaterialUpdate,
@@ -122,6 +124,19 @@ class InventoryService:
 
         self.db.commit()
         self.db.refresh(transaction)
+
+        if data.item_type == "material":
+            material = self.get_material(data.item_id)
+            if material and material.current_stock < material.safety_stock:
+                notification_service = NotificationService(self.db)
+                notification_service.create_notification(
+                    event_type="inventory_low",
+                    title=f"库存预警: {material.name}",
+                    content=f"原材料 {material.name} 当前库存 {material.current_stock} 低于安全库存 {material.safety_stock}",
+                    link="/inventory/materials",
+                    notification_type="inventory"
+                )
+
         return transaction
 
     def list_transactions(self, item_type: str | None = None, item_id: int | None = None, skip: int = 0, limit: int = 100):

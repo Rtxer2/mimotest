@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.models.quality import QualityInspection, QualityIssue
 from app.schemas.quality import QualityInspectionCreate
+from app.services.notification_service import NotificationService
 
 
 class QualityService:
@@ -35,6 +36,17 @@ class QualityService:
 
         self.db.commit()
         self.db.refresh(inspection)
+
+        if data.result == "fail":
+            notification_service = NotificationService(self.db)
+            notification_service.create_notification(
+                event_type="quality_issue_created",
+                title=f"质量问题: 质检不合格",
+                content=f"质检记录 #{inspection.id} 结果为不合格，请及时处理",
+                link="/quality/issues",
+                notification_type="quality"
+            )
+
         return inspection
 
     def list_issues(self, skip: int = 0, limit: int = 100, status: str | None = None):

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.models.customer import Customer
 from app.models.order import Order, OrderItem
 from app.schemas.order import OrderCreate, OrderUpdate
+from app.services.notification_service import NotificationService
 
 ALLOWED_ORDER_STATUSES = ["pending", "confirmed", "production", "quality", "packaging", "shipping", "completed", "cancelled"]
 
@@ -49,6 +50,16 @@ class OrderService:
 
         self.db.commit()
         self.db.refresh(order)
+
+        notification_service = NotificationService(self.db)
+        notification_service.create_notification(
+            event_type="order_created",
+            title=f"新订单: {order.order_no}",
+            content=f"客户 {order.customer.name} 创建了新订单 {order.order_no}",
+            link=f"/orders/{order.id}",
+            notification_type="order"
+        )
+
         return order
 
     def update_order(self, order_id: int, data: OrderUpdate):
@@ -70,4 +81,14 @@ class OrderService:
         order.status = status
         self.db.commit()
         self.db.refresh(order)
+
+        notification_service = NotificationService(self.db)
+        notification_service.create_notification(
+            event_type="order_status_changed",
+            title=f"订单状态变更: {order.order_no}",
+            content=f"订单 {order.order_no} 状态变更为 {status}",
+            link=f"/orders/{order.id}",
+            notification_type="order"
+        )
+
         return order
