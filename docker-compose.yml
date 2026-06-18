@@ -5,7 +5,7 @@ services:
     image: postgres:15-alpine
     environment:
       POSTGRES_USER: erp_user
-      POSTGRES_PASSWORD: erp_password
+      POSTGRES_PASSWORD: 123456
       POSTGRES_DB: erp_db
     ports:
       - "5432:5432"
@@ -17,7 +17,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://erp_user:erp_password@postgres:5432/erp_db
+      DATABASE_URL: postgresql://erp_user:123456@postgres:5432/erp_db
       SECRET_KEY: your-secret-key-change-in-production
     depends_on:
       - postgres
