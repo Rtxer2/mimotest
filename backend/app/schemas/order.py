@@ -35,7 +35,6 @@ class OrderCreate(OrderBase):
 class OrderUpdate(BaseModel):
     delivery_date: datetime | None = None
     remarks: str | None = None
-    status: str | None = None
 
 
 class OrderResponse(OrderBase):
