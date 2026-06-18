@@ -1,27 +1,29 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db_session
+from app.api.deps import get_db_session, require_any_role, require_operator_or_above, require_manager_or_above
+from app.models.user import User
 from app.schemas.order import OrderCreate, OrderUpdate, OrderResponse, OrderDetailResponse
 from app.services.order_service import OrderService
 
 router = APIRouter()
 
 
-@router.get("/", response_model=list[OrderResponse])
+@router.get("", response_model=list[OrderResponse])
 def list_orders(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     customer_id: int | None = None,
     status: str | None = None,
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db_session),
+    current_user: User = Depends(require_any_role)
 ):
     service = OrderService(db)
     return service.list_orders(skip=skip, limit=limit, customer_id=customer_id, status=status)
 
 
 @router.get("/{order_id}", response_model=OrderDetailResponse)
-def get_order(order_id: int, db: Session = Depends(get_db_session)):
+def get_order(order_id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
     service = OrderService(db)
     order = service.get_order(order_id)
     if not order:
@@ -29,8 +31,8 @@ def get_order(order_id: int, db: Session = Depends(get_db_session)):
     return order
 
 
-@router.post("/", response_model=OrderResponse)
-def create_order(data: OrderCreate, db: Session = Depends(get_db_session)):
+@router.post("", response_model=OrderResponse)
+def create_order(data: OrderCreate, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
     service = OrderService(db)
     try:
         return service.create_order(data)
@@ -39,7 +41,7 @@ def create_order(data: OrderCreate, db: Session = Depends(get_db_session)):
 
 
 @router.put("/{order_id}", response_model=OrderResponse)
-def update_order(order_id: int, data: OrderUpdate, db: Session = Depends(get_db_session)):
+def update_order(order_id: int, data: OrderUpdate, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
     service = OrderService(db)
     order = service.update_order(order_id, data)
     if not order:
@@ -48,7 +50,7 @@ def update_order(order_id: int, data: OrderUpdate, db: Session = Depends(get_db_
 
 
 @router.put("/{order_id}/status", response_model=OrderResponse)
-def update_status(order_id: int, status: str, db: Session = Depends(get_db_session)):
+def update_status(order_id: int, status: str, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
     service = OrderService(db)
     try:
         order = service.update_status(order_id, status)

@@ -2,8 +2,9 @@ from datetime import datetime
 from decimal import Decimal
 from sqlalchemy.orm import Session
 
-from app.models.inventory import Material, FinishedProduct, StockTransaction
+from app.models.inventory import Category, Material, FinishedProduct, StockTransaction
 from app.schemas.inventory import (
+    CategoryCreate,
     MaterialCreate, MaterialUpdate,
     FinishedProductCreate, FinishedProductUpdate,
     StockTransactionCreate
@@ -37,8 +38,32 @@ class InventoryService:
         self.db.refresh(material)
         return material
 
-    def list_products(self, skip: int = 0, limit: int = 100):
-        return self.db.query(FinishedProduct).offset(skip).limit(limit).all()
+    def list_categories(self):
+        return self.db.query(Category).order_by(Category.name).all()
+
+    def create_category(self, data: CategoryCreate):
+        existing = self.db.query(Category).filter(Category.name == data.name).first()
+        if existing:
+            raise ValueError(f"Category '{data.name}' already exists")
+        cat = Category(name=data.name)
+        self.db.add(cat)
+        self.db.commit()
+        self.db.refresh(cat)
+        return cat
+
+    def delete_category(self, category_id: int):
+        cat = self.db.query(Category).filter(Category.id == category_id).first()
+        if not cat:
+            return False
+        self.db.delete(cat)
+        self.db.commit()
+        return True
+
+    def list_products(self, skip: int = 0, limit: int = 100, category: str | None = None):
+        query = self.db.query(FinishedProduct)
+        if category:
+            query = query.filter(FinishedProduct.category == category)
+        return query.offset(skip).limit(limit).all()
 
     def get_product(self, product_id: int):
         return self.db.query(FinishedProduct).filter(FinishedProduct.id == product_id).first()
@@ -59,6 +84,14 @@ class InventoryService:
         self.db.commit()
         self.db.refresh(product)
         return product
+
+    def delete_product(self, product_id: int):
+        product = self.get_product(product_id)
+        if not product:
+            return False
+        self.db.delete(product)
+        self.db.commit()
+        return True
 
     def create_transaction(self, data: StockTransactionCreate):
         transaction = StockTransaction(**data.model_dump(), transaction_date=datetime.utcnow())

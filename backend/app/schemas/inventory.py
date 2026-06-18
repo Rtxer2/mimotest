@@ -3,6 +3,18 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 
+class CategoryCreate(BaseModel):
+    name: str
+
+
+class CategoryResponse(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
 class MaterialBase(BaseModel):
     name: str
     code: str
@@ -32,6 +44,7 @@ class FinishedProductBase(BaseModel):
     product_name: str
     sku: str
     safety_stock: int = 0
+    category: str | None = ""
 
 
 class FinishedProductCreate(FinishedProductBase):
@@ -40,12 +53,15 @@ class FinishedProductCreate(FinishedProductBase):
 
 class FinishedProductUpdate(BaseModel):
     product_name: str | None = None
+    sku: str | None = None
     safety_stock: int | None = None
+    category: str | None = None
 
 
 class FinishedProductResponse(FinishedProductBase):
     id: int
     current_stock: int
+    photos: str | None = ""
 
     class Config:
         from_attributes = True

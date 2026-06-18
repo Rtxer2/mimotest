@@ -6,59 +6,71 @@ import {
   ToolOutlined,
   InboxOutlined,
   CheckCircleOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
 const { Sider } = Layout;
-
-const menuItems = [
-  {
-    key: '/',
-    icon: <DashboardOutlined />,
-    label: 'Dashboard',
-  },
-  {
-    key: '/customers',
-    icon: <UserOutlined />,
-    label: 'Customers',
-  },
-  {
-    key: '/orders',
-    icon: <ShoppingCartOutlined />,
-    label: 'Orders',
-  },
-  {
-    key: '/production',
-    icon: <ToolOutlined />,
-    label: 'Production',
-    children: [
-      { key: '/production/dashboard', label: 'Dashboard' },
-      { key: '/production/orders', label: 'Orders' },
-    ],
-  },
-  {
-    key: '/inventory',
-    icon: <InboxOutlined />,
-    label: 'Inventory',
-    children: [
-      { key: '/inventory/materials', label: 'Materials' },
-      { key: '/inventory/products', label: 'Products' },
-    ],
-  },
-  {
-    key: '/quality',
-    icon: <CheckCircleOutlined />,
-    label: 'Quality',
-    children: [
-      { key: '/quality/inspections', label: 'Inspections' },
-      { key: '/quality/issues', label: 'Issues' },
-    ],
-  },
-];
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const hasRole = useAuthStore((state) => state.hasRole);
+
+  const menuItems = [
+    {
+      key: '/',
+      icon: <DashboardOutlined />,
+      label: 'Dashboard',
+    },
+    {
+      key: '/customers',
+      icon: <UserOutlined />,
+      label: 'Customers',
+    },
+    {
+      key: '/orders',
+      icon: <ShoppingCartOutlined />,
+      label: 'Orders',
+    },
+    {
+      key: '/production',
+      icon: <ToolOutlined />,
+      label: 'Production',
+      children: [
+        { key: '/production/dashboard', label: 'Dashboard' },
+        { key: '/production/orders', label: 'Orders' },
+      ],
+    },
+    {
+      key: '/inventory',
+      icon: <InboxOutlined />,
+      label: 'Inventory',
+      children: [
+        { key: '/inventory/materials', label: 'Materials' },
+        { key: '/inventory/products', label: 'Products' },
+      ],
+    },
+    {
+      key: '/quality',
+      icon: <CheckCircleOutlined />,
+      label: 'Quality',
+      children: [
+        { key: '/quality/inspections', label: 'Inspections' },
+        { key: '/quality/issues', label: 'Issues' },
+      ],
+    },
+    {
+      key: '/system',
+      icon: <SettingOutlined />,
+      label: 'System',
+      children: [
+        ...(hasRole('admin') ? [{ key: '/system/users', label: 'User Management' }] : []),
+        { key: '/system/dict', label: 'Data Dictionary' },
+      ],
+    },
+  ];
 
   return (
     <Sider width={250} theme="dark">
@@ -69,7 +81,7 @@ const Sidebar = () => {
         theme="dark"
         mode="inline"
         selectedKeys={[location.pathname]}
-        defaultOpenKeys={['/production', '/inventory', '/quality']}
+        defaultOpenKeys={['/production', '/inventory', '/quality', '/system']}
         items={menuItems}
         onClick={({ key }) => navigate(key)}
       />

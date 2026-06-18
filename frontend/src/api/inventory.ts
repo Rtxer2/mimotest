@@ -15,6 +15,13 @@ export interface FinishedProduct {
   sku: string;
   current_stock: number;
   safety_stock: number;
+  category: string | null;
+  photos: string | null;
+}
+
+export interface Category {
+  id: number;
+  name: string;
 }
 
 export interface StockTransaction {
@@ -34,11 +41,39 @@ export const inventoryApi = {
   createMaterial: (data: Omit<Material, 'id' | 'current_stock'>) =>
     client.post<Material>('/inventory/materials', data),
 
-  listProducts: (params?: { skip?: number; limit?: number }) =>
+  listProducts: (params?: { skip?: number; limit?: number; category?: string }) =>
     client.get<FinishedProduct[]>('/inventory/products', { params }),
 
-  createProduct: (data: Omit<FinishedProduct, 'id' | 'current_stock'>) =>
+  createProduct: (data: { product_name: string; sku: string; safety_stock: number; category?: string }) =>
     client.post<FinishedProduct>('/inventory/products', data),
+
+  updateProduct: (id: number, data: { product_name?: string; sku?: string; safety_stock?: number; category?: string }) =>
+    client.put<FinishedProduct>(`/inventory/products/${id}`, data),
+
+  deleteProduct: (id: number) =>
+    client.delete(`/inventory/products/${id}`),
+
+  listCategories: () =>
+    client.get<Category[]>('/inventory/products/categories'),
+
+  createCategory: (name: string) =>
+    client.post<Category>('/inventory/products/categories', { name }),
+
+  deleteCategory: (id: number) =>
+    client.delete(`/inventory/products/categories/${id}`),
+
+  uploadProductPhoto: (productId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return client.post<{ photo_url: string; photos: string }>(
+      `/inventory/products/${productId}/photos`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+  },
+
+  removeProductPhoto: (productId: number, photoUrl: string) =>
+    client.delete<{ photos: string }>(`/inventory/products/${productId}/photos`, { params: { photo_url: photoUrl } }),
 
   createTransaction: (data: {
     item_type: string;

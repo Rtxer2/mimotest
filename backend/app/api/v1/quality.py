@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db_session
+from app.api.deps import get_db_session, require_any_role, require_operator_or_above, require_manager_or_above
+from app.models.user import User
 from app.schemas.quality import (
     QualityInspectionCreate, QualityInspectionResponse, QualityInspectionDetailResponse,
     QualityIssueResponse, QualityIssueUpdate
@@ -16,14 +17,15 @@ def list_inspections(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     inspection_type: str | None = None,
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db_session),
+    current_user: User = Depends(require_any_role)
 ):
     service = QualityService(db)
     return service.list_inspections(skip=skip, limit=limit, inspection_type=inspection_type)
 
 
 @router.get("/inspections/{inspection_id}", response_model=QualityInspectionDetailResponse)
-def get_inspection(inspection_id: int, db: Session = Depends(get_db_session)):
+def get_inspection(inspection_id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
     service = QualityService(db)
     inspection = service.get_inspection(inspection_id)
     if not inspection:
@@ -32,7 +34,7 @@ def get_inspection(inspection_id: int, db: Session = Depends(get_db_session)):
 
 
 @router.post("/inspections", response_model=QualityInspectionResponse)
-def create_inspection(data: QualityInspectionCreate, db: Session = Depends(get_db_session)):
+def create_inspection(data: QualityInspectionCreate, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
     service = QualityService(db)
     return service.create_inspection(data)
 
@@ -42,14 +44,15 @@ def list_issues(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     status: str | None = None,
-    db: Session = Depends(get_db_session)
+    db: Session = Depends(get_db_session),
+    current_user: User = Depends(require_any_role)
 ):
     service = QualityService(db)
     return service.list_issues(skip=skip, limit=limit, status=status)
 
 
 @router.put("/issues/{issue_id}", response_model=QualityIssueResponse)
-def update_issue(issue_id: int, data: QualityIssueUpdate, db: Session = Depends(get_db_session)):
+def update_issue(issue_id: int, data: QualityIssueUpdate, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
     service = QualityService(db)
     issue = service.update_issue(issue_id, data.status)
     if not issue:

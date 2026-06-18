@@ -40,7 +40,7 @@ const OrderList = () => {
       title: 'Total Amount',
       dataIndex: 'total_amount',
       key: 'total_amount',
-      render: (val?: number) => (val != null ? `$${val.toFixed(2)}` : '-'),
+      render: (val?: string | number) => (val != null ? `$${Number(val).toFixed(2)}` : '-'),
     },
     { title: 'Delivery Date', dataIndex: 'delivery_date', key: 'delivery_date' },
     {

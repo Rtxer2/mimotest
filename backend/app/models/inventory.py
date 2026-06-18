@@ -2,6 +2,12 @@ from sqlalchemy import Column, String, Integer, Numeric, DateTime, Text
 from app.models.base import BaseModel
 
 
+class Category(BaseModel):
+    __tablename__ = "categories"
+
+    name = Column(String(50), unique=True, nullable=False)
+
+
 class Material(BaseModel):
     __tablename__ = "materials"
 
@@ -19,6 +25,8 @@ class FinishedProduct(BaseModel):
     sku = Column(String(50), unique=True, nullable=False)
     current_stock = Column(Integer, default=0)
     safety_stock = Column(Integer, default=0)
+    category = Column(String(50), default="")
+    photos = Column(Text, default="")
 
 
 class StockTransaction(BaseModel):

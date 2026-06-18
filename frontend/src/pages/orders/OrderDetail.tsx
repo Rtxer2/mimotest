@@ -55,7 +55,7 @@ const OrderDetail = () => {
       title: 'Unit Price',
       dataIndex: 'unit_price',
       key: 'unit_price',
-      render: (val?: number) => (val != null ? `$${val.toFixed(2)}` : '-'),
+      render: (val?: string | number) => (val != null ? `$${Number(val).toFixed(2)}` : '-'),
     },
     { title: 'Specs', dataIndex: 'specs', key: 'specs' },
   ];
@@ -68,7 +68,7 @@ const OrderDetail = () => {
           <Descriptions.Item label="Order No">{order.order_no}</Descriptions.Item>
           <Descriptions.Item label="Customer ID">{order.customer_id}</Descriptions.Item>
           <Descriptions.Item label="Total Amount">
-            {order.total_amount != null ? `$${order.total_amount.toFixed(2)}` : '-'}
+            {order.total_amount != null ? `$${Number(order.total_amount).toFixed(2)}` : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="Delivery Date">{order.delivery_date ?? '-'}</Descriptions.Item>
           <Descriptions.Item label="Status">

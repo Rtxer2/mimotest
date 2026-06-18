@@ -20,7 +20,7 @@ const CreateOrder = () => {
     try {
       const data: OrderCreate = {
         customer_id: values.customer_id,
-        delivery_date: values.delivery_date?.format('YYYY-MM-DD'),
+        delivery_date: values.delivery_date?.format('YYYY-MM-DD') + 'T00:00:00',
         remarks: values.remarks,
         items: (values.items ?? []).map((item: any) => ({
           product_name: item.product_name,
@@ -32,8 +32,14 @@ const CreateOrder = () => {
       await orderApi.create(data);
       message.success('Order created');
       navigate('/orders');
-    } catch (error) {
-      message.error('Failed to create order');
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        message.error(`Validation error: ${detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join('; ')}`);
+      } else {
+        message.error(`Failed to create order: ${detail || error?.message || 'Unknown error'}`);
+      }
+      console.error('Order creation error:', error?.response?.data);
     } finally {
       setSubmitting(false);
     }

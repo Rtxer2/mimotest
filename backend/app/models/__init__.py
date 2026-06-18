@@ -1,15 +1,19 @@
 from app.models.base import Base
+from app.models.user import User
 from app.models.customer import Customer, Contact, FollowUp
 from app.models.order import Order, OrderItem
 from app.models.production import ProductionOrder, ProductionStage
-from app.models.inventory import Material, FinishedProduct, StockTransaction
+from app.models.inventory import Category, Material, FinishedProduct, StockTransaction
 from app.models.quality import QualityInspection, QualityIssue
+from app.models.dict import DictType, DictEntry
 
 __all__ = [
     "Base",
+    "User",
     "Customer", "Contact", "FollowUp",
     "Order", "OrderItem",
     "ProductionOrder", "ProductionStage",
-    "Material", "FinishedProduct", "StockTransaction",
+    "Category", "Material", "FinishedProduct", "StockTransaction",
     "QualityInspection", "QualityIssue",
+    "DictType", "DictEntry",
 ]

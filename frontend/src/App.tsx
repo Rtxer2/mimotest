@@ -15,6 +15,8 @@ import MaterialList from './pages/inventory/MaterialList';
 import ProductList from './pages/inventory/ProductList';
 import InspectionList from './pages/quality/InspectionList';
 import IssueList from './pages/quality/IssueList';
+import DictList from './pages/system/DictList';
+import UserList from './pages/system/UserList';
 
 function App() {
   return (
@@ -34,6 +36,8 @@ function App() {
         <Route path="inventory/products" element={<ProductList />} />
         <Route path="quality/inspections" element={<InspectionList />} />
         <Route path="quality/issues" element={<IssueList />} />
+        <Route path="system/dict" element={<DictList />} />
+        <Route path="system/users" element={<UserList />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
