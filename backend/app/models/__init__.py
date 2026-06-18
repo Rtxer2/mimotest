@@ -6,6 +6,7 @@ from app.models.production import ProductionOrder, ProductionStage
 from app.models.inventory import Category, Material, FinishedProduct, StockTransaction
 from app.models.quality import QualityInspection, QualityIssue
 from app.models.dict import DictType, DictEntry
+from app.models.notification import Notification, NotificationRule
 
 __all__ = [
     "Base",
@@ -16,4 +17,5 @@ __all__ = [
     "Category", "Material", "FinishedProduct", "StockTransaction",
     "QualityInspection", "QualityIssue",
     "DictType", "DictEntry",
+    "Notification", "NotificationRule",
 ]
