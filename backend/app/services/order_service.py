@@ -5,9 +5,10 @@ from sqlalchemy.orm import Session
 from app.models.customer import Customer
 from app.models.order import Order, OrderItem
 from app.schemas.order import OrderCreate, OrderUpdate
+from app.services.approval_service import ApprovalService
 from app.services.notification_service import NotificationService
 
-ALLOWED_ORDER_STATUSES = ["pending", "confirmed", "production", "quality", "packaging", "shipping", "completed", "cancelled"]
+ALLOWED_ORDER_STATUSES = ["pending", "pending_approval", "confirmed", "production", "quality", "packaging", "shipping", "completed", "cancelled"]
 
 
 class OrderService:
@@ -59,6 +60,20 @@ class OrderService:
             link=f"/orders/{order.id}",
             notification_type="order"
         )
+
+        approval_service = ApprovalService(self.db)
+        context = {"min_amount": float(order.total_amount) if order.total_amount else 0}
+        flow = approval_service.find_matching_flow("order", context)
+        if flow:
+            instance = approval_service.create_instance(
+                flow_id=flow.id,
+                business_type="order",
+                business_id=order.id,
+                initiator_id=order.customer_id
+            )
+            order.status = "pending_approval"
+            self.db.commit()
+            self.db.refresh(order)
 
         return order
 
