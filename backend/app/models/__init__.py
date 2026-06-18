@@ -7,6 +7,7 @@ from app.models.inventory import Category, Material, FinishedProduct, StockTrans
 from app.models.quality import QualityInspection, QualityIssue
 from app.models.dict import DictType, DictEntry
 from app.models.notification import Notification, NotificationRule
+from app.models.approval import ApprovalFlow, ApprovalNode, ApprovalInstance, ApprovalRecord
 
 __all__ = [
     "Base",
@@ -18,4 +19,5 @@ __all__ = [
     "QualityInspection", "QualityIssue",
     "DictType", "DictEntry",
     "Notification", "NotificationRule",
+    "ApprovalFlow", "ApprovalNode", "ApprovalInstance", "ApprovalRecord",
 ]
