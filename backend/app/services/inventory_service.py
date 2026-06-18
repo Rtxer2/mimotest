@@ -66,18 +66,26 @@ class InventoryService:
 
         if data.item_type == "material":
             material = self.get_material(data.item_id)
-            if material:
-                if data.transaction_type == "in":
-                    material.current_stock += data.quantity
-                else:
-                    material.current_stock -= data.quantity
+            if not material:
+                raise ValueError(f"Material {data.item_id} not found")
+            if data.transaction_type == "in":
+                material.current_stock += data.quantity
+            else:
+                if material.current_stock < data.quantity:
+                    raise ValueError(f"Insufficient stock for material {data.item_id}")
+                material.current_stock -= data.quantity
         elif data.item_type == "product":
             product = self.get_product(data.item_id)
-            if product:
-                if data.transaction_type == "in":
-                    product.current_stock += int(data.quantity)
-                else:
-                    product.current_stock -= int(data.quantity)
+            if not product:
+                raise ValueError(f"Product {data.item_id} not found")
+            if data.transaction_type == "in":
+                product.current_stock += int(data.quantity)
+            else:
+                if product.current_stock < int(data.quantity):
+                    raise ValueError(f"Insufficient stock for product {data.item_id}")
+                product.current_stock -= int(data.quantity)
+        else:
+            raise ValueError(f"Invalid item_type: {data.item_type}")
 
         self.db.commit()
         self.db.refresh(transaction)

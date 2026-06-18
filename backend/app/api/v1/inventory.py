@@ -75,7 +75,10 @@ def update_product(product_id: int, data: FinishedProductUpdate, db: Session = D
 @router.post("/transactions", response_model=StockTransactionResponse)
 def create_transaction(data: StockTransactionCreate, db: Session = Depends(get_db_session)):
     service = InventoryService(db)
-    return service.create_transaction(data)
+    try:
+        return service.create_transaction(data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/transactions", response_model=list[StockTransactionResponse])
