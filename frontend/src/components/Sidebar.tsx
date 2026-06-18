@@ -7,6 +7,7 @@ import {
   InboxOutlined,
   CheckCircleOutlined,
   SettingOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -60,6 +61,11 @@ const Sidebar = () => {
         { key: '/quality/inspections', label: 'Inspections' },
         { key: '/quality/issues', label: 'Issues' },
       ],
+    },
+    {
+      key: '/notifications',
+      icon: <BellOutlined />,
+      label: 'Notifications',
     },
     {
       key: '/system',

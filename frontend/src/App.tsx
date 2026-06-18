@@ -17,6 +17,7 @@ import InspectionList from './pages/quality/InspectionList';
 import IssueList from './pages/quality/IssueList';
 import DictList from './pages/system/DictList';
 import UserList from './pages/system/UserList';
+import NotificationList from './pages/notifications/NotificationList';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
         <Route path="quality/issues" element={<IssueList />} />
         <Route path="system/dict" element={<DictList />} />
         <Route path="system/users" element={<UserList />} />
+        <Route path="notifications" element={<NotificationList />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
