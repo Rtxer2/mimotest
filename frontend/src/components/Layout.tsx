@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import Sidebar from './Sidebar';
+import NotificationBell from './NotificationBell';
 
 const { Content, Header } = Layout;
 
@@ -22,6 +23,7 @@ const MainLayout = () => {
       <Layout>
         <Header style={{ background: '#fff', padding: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', borderBottom: '1px solid #f0f0f0' }}>
           <Space>
+            <NotificationBell />
             <UserOutlined />
             <span>{user?.username || 'Unknown'} ({user?.role || '-'})</span>
             <Button icon={<LogoutOutlined />} onClick={handleLogout}>Logout</Button>
