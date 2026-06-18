@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, customers, orders, production, inventory, quality, dict, users
+from app.api.v1 import auth, customers, orders, production, inventory, quality, dict, users, notifications
 
 api_router = APIRouter()
 
@@ -12,3 +12,4 @@ api_router.include_router(production.router, prefix="/production", tags=["produc
 api_router.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
 api_router.include_router(quality.router, prefix="/quality", tags=["quality"])
 api_router.include_router(dict.router, prefix="/dict", tags=["dict"])
+api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
