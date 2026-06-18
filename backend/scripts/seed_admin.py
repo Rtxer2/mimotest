@@ -6,6 +6,7 @@ from app.core.database import SessionLocal
 from app.core.security import get_password_hash
 from app.models.user import User
 from app.models.notification import NotificationRule
+from app.models.approval import ApprovalFlow, ApprovalNode
 
 
 def seed():
@@ -50,6 +51,52 @@ def seed_notification_rules():
     db.close()
 
 
+def seed_approval_flows():
+    db = SessionLocal()
+    existing = db.query(ApprovalFlow).first()
+    if existing:
+        print("Approval flows already exist")
+        db.close()
+        return
+
+    order_flow = ApprovalFlow(
+        name="订单审批流程",
+        business_type="order",
+        trigger_condition={"min_amount": 10000},
+        is_active=True
+    )
+    db.add(order_flow)
+    db.flush()
+
+    order_nodes = [
+        ApprovalNode(flow_id=order_flow.id, node_order=1, node_name="部门经理审批", approver_type="role", approver_value="manager", action_on_reject="reject_to_start"),
+        ApprovalNode(flow_id=order_flow.id, node_order=2, node_name="总经理审批", approver_type="role", approver_value="admin", action_on_reject="reject_to_start"),
+    ]
+    for node in order_nodes:
+        db.add(node)
+
+    prod_flow = ApprovalFlow(
+        name="生产工单审批流程",
+        business_type="production",
+        trigger_condition={},
+        is_active=True
+    )
+    db.add(prod_flow)
+    db.flush()
+
+    prod_nodes = [
+        ApprovalNode(flow_id=prod_flow.id, node_order=1, node_name="生产主管审批", approver_type="role", approver_value="operator", action_on_reject="reject_to_start"),
+        ApprovalNode(flow_id=prod_flow.id, node_order=2, node_name="质量经理审批", approver_type="role", approver_value="manager", action_on_reject="reject_to_prev"),
+    ]
+    for node in prod_nodes:
+        db.add(node)
+
+    db.commit()
+    print("Default approval flows created")
+    db.close()
+
+
 if __name__ == "__main__":
     seed()
     seed_notification_rules()
+    seed_approval_flows()
