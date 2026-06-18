@@ -32,7 +32,10 @@ def get_order(order_id: int, db: Session = Depends(get_db_session)):
 @router.post("/", response_model=OrderResponse)
 def create_order(data: OrderCreate, db: Session = Depends(get_db_session)):
     service = OrderService(db)
-    return service.create_order(data)
+    try:
+        return service.create_order(data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.put("/{order_id}", response_model=OrderResponse)
@@ -47,7 +50,10 @@ def update_order(order_id: int, data: OrderUpdate, db: Session = Depends(get_db_
 @router.put("/{order_id}/status", response_model=OrderResponse)
 def update_status(order_id: int, status: str, db: Session = Depends(get_db_session)):
     service = OrderService(db)
-    order = service.update_status(order_id, status)
+    try:
+        order = service.update_status(order_id, status)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order

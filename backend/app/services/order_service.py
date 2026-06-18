@@ -2,8 +2,11 @@ import uuid
 from decimal import Decimal
 from sqlalchemy.orm import Session
 
+from app.models.customer import Customer
 from app.models.order import Order, OrderItem
 from app.schemas.order import OrderCreate, OrderUpdate
+
+ALLOWED_ORDER_STATUSES = ["pending", "confirmed", "production", "quality", "packaging", "shipping", "completed", "cancelled"]
 
 
 class OrderService:
@@ -22,7 +25,10 @@ class OrderService:
         return self.db.query(Order).filter(Order.id == order_id).first()
 
     def create_order(self, data: OrderCreate):
-        order_no = f"ORD-{uuid.uuid4().hex[:8].upper()}"
+        customer = self.db.query(Customer).filter(Customer.id == data.customer_id).first()
+        if not customer:
+            raise ValueError(f"Customer {data.customer_id} not found")
+        order_no = f"ORD-{uuid.uuid4().hex[:16].upper()}"
         total_amount = sum(
             (item.quantity * (item.unit_price or Decimal("0")))
             for item in data.items
@@ -56,6 +62,8 @@ class OrderService:
         return order
 
     def update_status(self, order_id: int, status: str):
+        if status not in ALLOWED_ORDER_STATUSES:
+            raise ValueError(f"Invalid status: {status}. Allowed: {ALLOWED_ORDER_STATUSES}")
         order = self.get_order(order_id)
         if not order:
             return None
