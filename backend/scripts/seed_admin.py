@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
 from app.models.user import User
+from app.models.notification import NotificationRule
 
 
 def seed():
@@ -27,5 +28,28 @@ def seed():
     db.close()
 
 
+def seed_notification_rules():
+    db = SessionLocal()
+    existing = db.query(NotificationRule).first()
+    if existing:
+        print("Notification rules already exist")
+        db.close()
+        return
+
+    rules = [
+        NotificationRule(event_type="order_created", role="manager", is_active=True),
+        NotificationRule(event_type="order_status_changed", role="operator", is_active=True),
+        NotificationRule(event_type="inventory_low", role="manager", is_active=True),
+        NotificationRule(event_type="quality_issue_created", role="manager", is_active=True),
+        NotificationRule(event_type="production_created", role="operator", is_active=True),
+    ]
+    for rule in rules:
+        db.add(rule)
+    db.commit()
+    print("Default notification rules created")
+    db.close()
+
+
 if __name__ == "__main__":
     seed()
+    seed_notification_rules()
