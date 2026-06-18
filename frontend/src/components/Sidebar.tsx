@@ -8,6 +8,7 @@ import {
   CheckCircleOutlined,
   SettingOutlined,
   BellOutlined,
+  AuditOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -63,6 +64,16 @@ const Sidebar = () => {
       ],
     },
     {
+      key: '/approvals',
+      icon: <AuditOutlined />,
+      label: '审批管理',
+      children: [
+        { key: '/approvals/pending', label: '待我审批' },
+        { key: '/approvals/initiated', label: '我发起的' },
+        ...(hasRole('admin') ? [{ key: '/approvals/flows', label: '流程配置' }] : []),
+      ],
+    },
+    {
       key: '/notifications',
       icon: <BellOutlined />,
       label: 'Notifications',
@@ -87,7 +98,7 @@ const Sidebar = () => {
         theme="dark"
         mode="inline"
         selectedKeys={[location.pathname]}
-        defaultOpenKeys={['/production', '/inventory', '/quality', '/system']}
+        defaultOpenKeys={['/production', '/inventory', '/quality', '/system', '/approvals']}
         items={menuItems}
         onClick={({ key }) => navigate(key)}
       />

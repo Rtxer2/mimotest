@@ -18,6 +18,10 @@ import IssueList from './pages/quality/IssueList';
 import DictList from './pages/system/DictList';
 import UserList from './pages/system/UserList';
 import NotificationList from './pages/notifications/NotificationList';
+import PendingList from './pages/approvals/PendingList';
+import InitiatedList from './pages/approvals/InitiatedList';
+import ApprovalDetail from './pages/approvals/ApprovalDetail';
+import FlowConfig from './pages/approvals/FlowConfig';
 
 function App() {
   return (
@@ -40,6 +44,10 @@ function App() {
         <Route path="system/dict" element={<DictList />} />
         <Route path="system/users" element={<UserList />} />
         <Route path="notifications" element={<NotificationList />} />
+        <Route path="approvals/pending" element={<PendingList />} />
+        <Route path="approvals/initiated" element={<InitiatedList />} />
+        <Route path="approvals/flows" element={<FlowConfig />} />
+        <Route path="approvals/:id" element={<ApprovalDetail />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
