@@ -52,8 +52,8 @@ def update_order(order_id: int, data: ProductionOrderUpdate, db: Session = Depen
     return order
 
 
-@router.put("/stages/{stage_id}")
-def update_stage(stage_id: int, status: str, progress: float | None = None, db: Session = Depends(get_db_session)):
+@router.put("/orders/{order_id}/stages/{stage_id}")
+def update_stage(order_id: int, stage_id: int, status: str, progress: float | None = None, db: Session = Depends(get_db_session)):
     service = ProductionService(db)
     stage = service.update_stage(stage_id, status, progress)
     if not stage:
