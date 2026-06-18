@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db_session
 from app.schemas.quality import (
     QualityInspectionCreate, QualityInspectionResponse, QualityInspectionDetailResponse,
-    QualityIssueResponse
+    QualityIssueResponse, QualityIssueUpdate
 )
 from app.services.quality_service import QualityService
 
@@ -49,9 +49,9 @@ def list_issues(
 
 
 @router.put("/issues/{issue_id}", response_model=QualityIssueResponse)
-def update_issue(issue_id: int, status: str, db: Session = Depends(get_db_session)):
+def update_issue(issue_id: int, data: QualityIssueUpdate, db: Session = Depends(get_db_session)):
     service = QualityService(db)
-    issue = service.update_issue(issue_id, status)
+    issue = service.update_issue(issue_id, data.status)
     if not issue:
         raise HTTPException(status_code=404, detail="Issue not found")
     return issue

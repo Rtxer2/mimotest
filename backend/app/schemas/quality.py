@@ -12,6 +12,10 @@ class QualityIssueCreate(QualityIssueBase):
     pass
 
 
+class QualityIssueUpdate(BaseModel):
+    status: str
+
+
 class QualityIssueResponse(QualityIssueBase):
     id: int
     inspection_id: int
