@@ -14,13 +14,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
 
   login: async (username: string, password: string) => {
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('password', password);
-
-    const response = await client.post('/auth/login', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await client.post('/auth/login',
+      new URLSearchParams({ username, password }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
 
     const { access_token } = response.data;
     localStorage.setItem('token', access_token);
