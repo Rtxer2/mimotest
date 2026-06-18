@@ -22,8 +22,8 @@ const Dashboard = () => {
     const loadStats = async () => {
       try {
         const [customers, orders, production] = await Promise.all([
-          customerApi.list({ limit: 1 }),
-          orderApi.list({ limit: 1 }),
+          customerApi.list(),
+          orderApi.list(),
           productionApi.dashboard(),
         ]);
         setStats({
