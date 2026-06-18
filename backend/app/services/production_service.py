@@ -49,10 +49,12 @@ class ProductionService:
         self.db.refresh(order)
         return order
 
-    def update_stage(self, stage_id: int, status: str, progress: float | None = None):
+    def update_stage(self, order_id: int, stage_id: int, status: str, progress: float | None = None):
         stage = self.db.query(ProductionStage).filter(ProductionStage.id == stage_id).first()
         if not stage:
             return None
+        if stage.production_order_id != order_id:
+            raise ValueError(f"Stage {stage_id} does not belong to order {order_id}")
         stage.status = status
         if progress is not None:
             stage.progress = progress
