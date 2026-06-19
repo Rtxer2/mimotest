@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message } from 'antd';
+import { useEffect, useState, useCallback } from 'react';
+import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, AutoComplete } from 'antd';
 import { PlusOutlined, DeleteOutlined, EyeOutlined, ImportOutlined, RollbackOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { procurementApi, PurchaseOrder, PurchaseOrderItem } from '../../api/procurement';
+import { inventoryApi } from '../../api/inventory';
+import { debounce } from '../../utils/debounce';
 
 const statusColors: Record<string, string> = {
   pending: 'default',
@@ -30,6 +32,8 @@ const PurchaseOrderList = () => {
   const [returnOrder, setReturnOrder] = useState<PurchaseOrder | null>(null);
   const [returnItems, setReturnItems] = useState<PurchaseOrderItem[]>([]);
   const [returnForm] = Form.useForm();
+  const [materialOptions, setMaterialOptions] = useState<any[]>([]);
+  const [productOptions, setProductOptions] = useState<any[]>([]);
 
   const loadData = async () => {
     setLoading(true);
@@ -44,6 +48,26 @@ const PurchaseOrderList = () => {
   };
 
   useEffect(() => { loadData(); }, []);
+
+  const searchMaterials = useCallback(
+    debounce(async (q: string) => {
+      if (!q) { setMaterialOptions([]); return; }
+      try {
+        const res = await inventoryApi.searchMaterials(q);
+        setMaterialOptions(res.data.map((m) => ({ value: String(m.id), label: `${m.name} (${m.code})` })));
+      } catch { setMaterialOptions([]); }
+    }, 300), []
+  );
+
+  const searchProducts = useCallback(
+    debounce(async (q: string) => {
+      if (!q) { setProductOptions([]); return; }
+      try {
+        const res = await inventoryApi.searchProducts(q);
+        setProductOptions(res.data.map((p) => ({ value: String(p.id), label: `${p.product_name} (${p.sku})` })));
+      } catch { setProductOptions([]); }
+    }, 300), []
+  );
 
   const handleCreate = async (values: any) => {
     setSubmitting(true);
@@ -228,14 +252,14 @@ const PurchaseOrderList = () => {
                     </Form.Item>
                     <Form.Item shouldUpdate={(prev, cur) => prev.items?.[field.name]?.item_type !== cur.items?.[field.name]?.item_type} noStyle>
                       {({ getFieldValue }) => {
-                        const itemType = getFieldValue(['items', field.name, 'item_type']);
+                        const itemType = getFieldValue(['items', field.name, 'item_type']) || 'material';
                         return itemType === 'product' ? (
                           <Form.Item {...field} name={[field.name, 'product_id']} rules={[{ required: true }]}>
-                            <InputNumber placeholder={t('procurement.product')} />
+                            <AutoComplete options={productOptions} onSearch={searchProducts} placeholder={t('procurement.product')} style={{ width: 200 }} filterOption={false} />
                           </Form.Item>
                         ) : (
                           <Form.Item {...field} name={[field.name, 'material_id']} rules={[{ required: true }]}>
-                            <InputNumber placeholder={t('procurement.material')} />
+                            <AutoComplete options={materialOptions} onSearch={searchMaterials} placeholder={t('procurement.material')} style={{ width: 200 }} filterOption={false} />
                           </Form.Item>
                         );
                       }}

@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import and_
@@ -20,6 +21,20 @@ class InventoryService:
 
     def list_materials(self, skip: int = 0, limit: int = 100):
         return self.db.query(Material).offset(skip).limit(limit).all()
+
+    def search_materials(self, q: str, limit: int = 20):
+        return self.db.query(Material).filter(Material.name.ilike(f"%{q}%")).limit(limit).all()
+
+    def get_or_create_material(self, name: str, unit: str = "pcs"):
+        existing = self.db.query(Material).filter(Material.name == name).first()
+        if existing:
+            return existing
+        code = f"M-{uuid.uuid4().hex[:8].upper()}"
+        material = Material(name=name, code=code, unit=unit)
+        self.db.add(material)
+        self.db.commit()
+        self.db.refresh(material)
+        return material
 
     def get_material(self, material_id: int):
         return self.db.query(Material).filter(Material.id == material_id).first()
@@ -70,6 +85,20 @@ class InventoryService:
 
     def get_product(self, product_id: int):
         return self.db.query(FinishedProduct).filter(FinishedProduct.id == product_id).first()
+
+    def search_products(self, q: str, limit: int = 20):
+        return self.db.query(FinishedProduct).filter(FinishedProduct.product_name.ilike(f"%{q}%")).limit(limit).all()
+
+    def get_or_create_product(self, name: str, category: str = ""):
+        existing = self.db.query(FinishedProduct).filter(FinishedProduct.product_name == name).first()
+        if existing:
+            return existing
+        sku = f"P-{uuid.uuid4().hex[:8].upper()}"
+        product = FinishedProduct(product_name=name, sku=sku, category=category)
+        self.db.add(product)
+        self.db.commit()
+        self.db.refresh(product)
+        return product
 
     def create_product(self, data: FinishedProductCreate):
         product = FinishedProduct(**data.model_dump())

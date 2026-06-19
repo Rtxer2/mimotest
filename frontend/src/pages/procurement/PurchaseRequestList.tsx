@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, Popconfirm } from 'antd';
+import { useEffect, useState, useCallback } from 'react';
+import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, Popconfirm, AutoComplete } from 'antd';
 import { PlusOutlined, DeleteOutlined, EyeOutlined, SendOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { procurementApi, PurchaseRequest, PurchaseRequestItem } from '../../api/procurement';
+import { inventoryApi } from '../../api/inventory';
+import { debounce } from '../../utils/debounce';
 
 const statusColors: Record<string, string> = {
   draft: 'default',
@@ -23,6 +25,9 @@ const PurchaseRequestList = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [form] = Form.useForm();
 
+  const [materialOptions, setMaterialOptions] = useState<any[]>([]);
+  const [productOptions, setProductOptions] = useState<any[]>([]);
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -36,6 +41,32 @@ const PurchaseRequestList = () => {
   };
 
   useEffect(() => { loadData(); }, []);
+
+  const searchMaterials = useCallback(
+    debounce(async (q: string) => {
+      if (!q) { setMaterialOptions([]); return; }
+      try {
+        const res = await inventoryApi.searchMaterials(q);
+        setMaterialOptions(
+          res.data.map((m) => ({ value: String(m.id), label: `${m.name} (${m.code})` }))
+        );
+      } catch { setMaterialOptions([]); }
+    }, 300),
+    []
+  );
+
+  const searchProducts = useCallback(
+    debounce(async (q: string) => {
+      if (!q) { setProductOptions([]); return; }
+      try {
+        const res = await inventoryApi.searchProducts(q);
+        setProductOptions(
+          res.data.map((p) => ({ value: String(p.id), label: `${p.product_name} (${p.sku})` }))
+        );
+      } catch { setProductOptions([]); }
+    }, 300),
+    []
+  );
 
   const handleCreate = async (values: any) => {
     setSubmitting(true);
@@ -134,7 +165,7 @@ const PurchaseRequestList = () => {
         onCancel={() => setModalOpen(false)}
         onOk={() => form.submit()}
         confirmLoading={submitting}
-        width={640}
+        width={700}
       >
         <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item name="supplier_id" label={t('procurement.supplier_name')} rules={[{ required: true }]}>
@@ -150,27 +181,39 @@ const PurchaseRequestList = () => {
                 {fields.map((field) => (
                   <Space key={field.key} align="baseline" style={{ display: 'flex', marginBottom: 8 }}>
                     <Form.Item {...field} name={[field.name, 'item_type']} rules={[{ required: true }]}>
-                      <Select options={[{ value: 'material', label: t('procurement.material') }, { value: 'product', label: t('procurement.product') }]} style={{ width: 120 }} placeholder={t('procurement.material')} />
+                      <Select options={[{ value: 'material', label: t('procurement.material') }, { value: 'product', label: t('procurement.product') }]} style={{ width: 110 }} placeholder={t('procurement.material')} />
                     </Form.Item>
                     <Form.Item shouldUpdate={(prev, cur) => prev.items?.[field.name]?.item_type !== cur.items?.[field.name]?.item_type} noStyle>
                       {({ getFieldValue }) => {
-                        const itemType = getFieldValue(['items', field.name, 'item_type']);
+                        const itemType = getFieldValue(['items', field.name, 'item_type']) || 'material';
                         return itemType === 'product' ? (
                           <Form.Item {...field} name={[field.name, 'product_id']} rules={[{ required: true }]}>
-                            <InputNumber placeholder={t('procurement.product')} />
+                            <AutoComplete
+                              options={productOptions}
+                              onSearch={searchProducts}
+                              placeholder={t('procurement.product')}
+                              style={{ width: 200 }}
+                              filterOption={false}
+                            />
                           </Form.Item>
                         ) : (
                           <Form.Item {...field} name={[field.name, 'material_id']} rules={[{ required: true }]}>
-                            <InputNumber placeholder={t('procurement.material')} />
+                            <AutoComplete
+                              options={materialOptions}
+                              onSearch={searchMaterials}
+                              placeholder={t('procurement.material')}
+                              style={{ width: 200 }}
+                              filterOption={false}
+                            />
                           </Form.Item>
                         );
                       }}
                     </Form.Item>
                     <Form.Item {...field} name={[field.name, 'quantity']} rules={[{ required: true }]}>
-                      <InputNumber placeholder={t('procurement.quantity')} min={1} />
+                      <InputNumber placeholder={t('procurement.quantity')} min={1} style={{ width: 90 }} />
                     </Form.Item>
                     <Form.Item {...field} name={[field.name, 'unit_price']} rules={[{ required: true }]}>
-                      <InputNumber placeholder={t('procurement.unit_price')} min={0} precision={2} />
+                      <InputNumber placeholder={t('procurement.unit_price')} min={0} precision={2} style={{ width: 100 }} />
                     </Form.Item>
                     <Button icon={<DeleteOutlined />} onClick={() => remove(field.name)} danger />
                   </Space>

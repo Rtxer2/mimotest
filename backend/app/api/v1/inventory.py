@@ -24,6 +24,18 @@ def get_alerts(db: Session = Depends(get_db_session), current_user: User = Depen
     return service.get_low_stock_alerts()
 
 
+@router.get("/materials/search", response_model=list[MaterialResponse])
+def search_materials(q: str = Query("", min_length=0), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = InventoryService(db)
+    return service.search_materials(q) if q else []
+
+
+@router.post("/materials/quick-create", response_model=MaterialResponse)
+def quick_create_material(name: str = Query(...), unit: str = Query("pcs"), db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = InventoryService(db)
+    return service.get_or_create_material(name, unit)
+
+
 @router.get("/materials", response_model=list[MaterialResponse])
 def list_materials(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
     service = InventoryService(db)
@@ -52,6 +64,18 @@ def update_material(material_id: int, data: MaterialUpdate, db: Session = Depend
     if not material:
         raise HTTPException(status_code=404, detail="Material not found")
     return material
+
+
+@router.get("/products/search", response_model=list[FinishedProductResponse])
+def search_products(q: str = Query("", min_length=0), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = InventoryService(db)
+    return service.search_products(q) if q else []
+
+
+@router.post("/products/quick-create", response_model=FinishedProductResponse)
+def quick_create_product(name: str = Query(...), db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = InventoryService(db)
+    return service.get_or_create_product(name)
 
 
 @router.get("/products", response_model=list[FinishedProductResponse])

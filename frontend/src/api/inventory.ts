@@ -89,4 +89,16 @@ export const inventoryApi = {
 
   getAlerts: () =>
     client.get<{ materials: Material[]; products: FinishedProduct[] }>('/inventory/alerts'),
+
+  searchMaterials: (q: string) =>
+    client.get<Material[]>('/inventory/materials/search', { params: { q } }),
+
+  quickCreateMaterial: (name: string, unit: string = 'pcs') =>
+    client.post<Material>('/inventory/materials/quick-create', null, { params: { name, unit } }),
+
+  searchProducts: (q: string) =>
+    client.get<FinishedProduct[]>('/inventory/products/search', { params: { q } }),
+
+  quickCreateProduct: (name: string) =>
+    client.post<FinishedProduct>('/inventory/products/quick-create', null, { params: { name } }),
 };
