@@ -34,6 +34,7 @@ const OrderList = () => {
   const [customerFilter, setCustomerFilter] = useState<number | null>(null);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
   const [customerList, setCustomerList] = useState<any[]>([]);
+  const [customerMap, setCustomerMap] = useState<Record<number, string>>({});
 
   const STATUS_LABELS: Record<string, string> = {
     pending: t('orders.status_pending'),
@@ -58,8 +59,11 @@ const OrderList = () => {
 
   const loadCustomers = async () => {
     try {
-      const res = await customerApi.list({ limit: 200 });
+      const res = await customerApi.list({ limit: 100 });
       setCustomerList(res.data);
+      const map: Record<number, string> = {};
+      res.data.forEach((c: any) => { map[c.id] = c.name; });
+      setCustomerMap(map);
     } catch {}
   };
 
@@ -142,7 +146,7 @@ const OrderList = () => {
 
   const columns = [
     { title: t('orders.order_no'), dataIndex: 'order_no', key: 'order_no' },
-    { title: t('orders.customer_id'), dataIndex: 'customer_id', key: 'customer_id' },
+    { title: t('customers.name'), dataIndex: 'customer_id', key: 'customer_id', render: (id: number) => customerMap[id] || id },
     {
       title: t('orders.total_amount'),
       dataIndex: 'total_amount',
