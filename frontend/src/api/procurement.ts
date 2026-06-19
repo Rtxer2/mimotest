@@ -113,6 +113,8 @@ export const procurementApi = {
     client.post<PurchaseRequest>('/procurement/requests', data),
   submitRequest: (id: number) =>
     client.post<PurchaseRequest>(`/procurement/requests/${id}/submit-approval`),
+  deleteRequest: (id: number) =>
+    client.delete(`/procurement/requests/${id}`),
 
   listOrders: (params?: { skip?: number; limit?: number; status?: string }) =>
     client.get<PurchaseOrder[]>('/procurement/orders', { params }),

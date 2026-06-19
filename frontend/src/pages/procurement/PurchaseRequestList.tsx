@@ -164,6 +164,16 @@ const PurchaseRequestList = () => {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    try {
+      await procurementApi.deleteRequest(id);
+      message.success(t('common.delete'));
+      loadData();
+    } catch (error: any) {
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
+    }
+  };
+
   const showDetail = async (id: number) => {
     setDrawerOpen(true);
     setDetailLoading(true);
@@ -197,6 +207,11 @@ const PurchaseRequestList = () => {
           {record.status === 'draft' && (
             <Popconfirm title={t('common.confirm')} onConfirm={() => handleSubmitApproval(record.id)}>
               <Button size="small" icon={<SendOutlined />}>{t('procurement.submit_approval')}</Button>
+            </Popconfirm>
+          )}
+          {record.status === 'draft' && (
+            <Popconfirm title={t('common.confirm')} onConfirm={() => handleDelete(record.id)}>
+              <Button size="small" danger icon={<DeleteOutlined />}>{t('common.delete')}</Button>
             </Popconfirm>
           )}
         </Space>
