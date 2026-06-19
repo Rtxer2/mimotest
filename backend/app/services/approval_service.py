@@ -182,6 +182,42 @@ class ApprovalService:
 
         return pending[skip:skip + limit]
 
+    def get_approval_records_by_business(self, business_type: str, business_id: int):
+        instances = self.db.query(ApprovalInstance).filter(
+            and_(
+                ApprovalInstance.business_type == business_type,
+                ApprovalInstance.business_id == business_id
+            )
+        ).all()
+        if not instances:
+            return []
+        instance_ids = [inst.id for inst in instances]
+        records = self.db.query(ApprovalRecord).filter(
+            ApprovalRecord.instance_id.in_(instance_ids)
+        ).order_by(ApprovalRecord.created_at.desc()).all()
+
+        instance_map = {inst.id: inst for inst in instances}
+        node_ids = {r.node_id for r in records}
+        nodes = self.db.query(ApprovalNode).filter(ApprovalNode.id.in_(node_ids)).all()
+        node_map = {n.id: n for n in nodes}
+
+        result = []
+        for record in records:
+            instance = instance_map.get(record.instance_id)
+            node = node_map.get(record.node_id)
+            result.append({
+                "id": record.id,
+                "instance_id": record.instance_id,
+                "node_id": record.node_id,
+                "node_name": node.node_name if node else "",
+                "approver_id": record.approver_id,
+                "action": record.action,
+                "comment": record.comment,
+                "created_at": record.created_at,
+                "instance_status": instance.status if instance else "",
+            })
+        return result
+
     def get_initiated_approvals(self, user_id: int, skip: int = 0, limit: int = 20):
         return self.db.query(ApprovalInstance).filter(
             ApprovalInstance.initiator_id == user_id

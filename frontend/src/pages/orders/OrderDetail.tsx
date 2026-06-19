@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Card, Descriptions, Table, Tag, Select, Button, message, Popconfirm } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
 import { orderApi, Order, OrderItem } from '../../api/orders';
+import { approvalApi } from '../../api/approvals';
 
 const statusOptions = ['pending', 'confirmed', 'in_production', 'completed', 'cancelled'];
 
@@ -27,6 +28,7 @@ const statusLabels: Record<string, string> = {
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<(Order & { items: OrderItem[] }) | null>(null);
+  const [approvalRecords, setApprovalRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadOrder = async () => {
@@ -35,6 +37,12 @@ const OrderDetail = () => {
     try {
       const response = await orderApi.get(parseInt(id));
       setOrder(response.data);
+      try {
+        const recordsRes = await approvalApi.getRecordsByBusiness('order', parseInt(id));
+        setApprovalRecords(recordsRes.data);
+      } catch {
+        setApprovalRecords([]);
+      }
     } catch (error) {
       console.error('Failed to load order:', error);
     } finally {
@@ -124,6 +132,32 @@ const OrderDetail = () => {
       <Card title="订单明细" style={{ marginTop: 16 }}>
         <Table columns={itemColumns} dataSource={order.items} rowKey="id" pagination={false} />
       </Card>
+
+      {approvalRecords.length > 0 && (
+        <Card title="审批记录" style={{ marginTop: 16 }}>
+          <Table
+            columns={[
+              { title: '审批节点', dataIndex: 'node_name', key: 'node_name' },
+              {
+                title: '操作',
+                dataIndex: 'action',
+                key: 'action',
+                render: (action: string) => (
+                  <Tag color={action === 'approve' ? 'green' : 'red'}>
+                    {action === 'approve' ? '通过' : '驳回'}
+                  </Tag>
+                ),
+              },
+              { title: '审批人ID', dataIndex: 'approver_id', key: 'approver_id' },
+              { title: '备注', dataIndex: 'comment', key: 'comment', render: (v: string) => v || '-' },
+              { title: '时间', dataIndex: 'created_at', key: 'created_at' },
+            ]}
+            dataSource={approvalRecords}
+            rowKey="id"
+            pagination={false}
+          />
+        </Card>
+      )}
     </div>
   );
 };

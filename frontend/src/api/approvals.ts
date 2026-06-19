@@ -91,6 +91,19 @@ export const approvalApi = {
   getInitiated: (params?: { skip?: number; limit?: number }) =>
     client.get<ApprovalInstance[]>('/approvals/initiated', { params }),
 
+  getRecordsByBusiness: (businessType: string, businessId: number) =>
+    client.get<Array<{
+      id: number;
+      instance_id: number;
+      node_id: number;
+      node_name: string;
+      approver_id: number;
+      action: string;
+      comment: string;
+      created_at: string;
+      instance_status: string;
+    }>>('/approvals/records', { params: { business_type: businessType, business_id: businessId } }),
+
   getDetail: (instanceId: number) =>
     client.get<ApprovalInstance & { nodes: ApprovalNode[]; records: ApprovalRecord[] }>(`/approvals/${instanceId}`),
 

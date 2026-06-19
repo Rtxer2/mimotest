@@ -121,6 +121,17 @@ def delete_node(
     return {"message": "Node deleted"}
 
 
+@router.get("/records")
+def get_approval_records(
+    business_type: str = Query(...),
+    business_id: int = Query(...),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db_session)
+):
+    service = ApprovalService(db)
+    return service.get_approval_records_by_business(business_type, business_id)
+
+
 # Approval operations
 @router.get("/pending", response_model=list[ApprovalInstanceResponse])
 def get_pending_approvals(
