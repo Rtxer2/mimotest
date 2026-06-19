@@ -33,7 +33,9 @@ class SupplierResponse(SupplierBase):
 
 
 class PurchaseRequestItemBase(BaseModel):
-    material_id: int
+    item_type: str = "material"
+    material_id: int | None = None
+    product_id: int | None = None
     quantity: float
     unit_price: float = 0
 
@@ -75,7 +77,9 @@ class PurchaseRequestDetailResponse(PurchaseRequestResponse):
 
 
 class PurchaseOrderItemBase(BaseModel):
-    material_id: int
+    item_type: str = "material"
+    material_id: int | None = None
+    product_id: int | None = None
     quantity: float
     unit_price: float = 0
 
@@ -122,4 +126,47 @@ class PurchaseOrderDetailResponse(PurchaseOrderResponse):
 
 class ReceiveItem(BaseModel):
     item_id: int
+    pass_quantity: float
+    reject_quantity: float
+    notes: str = ""
+
+
+class PurchaseReturnItemCreate(BaseModel):
+    order_item_id: int
     quantity: float
+    reason: str = ""
+
+
+class PurchaseReturnItemResponse(BaseModel):
+    id: int
+    return_id: int
+    order_item_id: int
+    quantity: float
+    reason: str
+
+    class Config:
+        from_attributes = True
+
+
+class PurchaseReturnCreate(BaseModel):
+    order_id: int
+    supplier_id: int
+    reason: str = ""
+    items: list[PurchaseReturnItemCreate] = []
+
+
+class PurchaseReturnResponse(BaseModel):
+    id: int
+    return_no: str
+    order_id: int
+    supplier_id: int
+    status: str
+    reason: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PurchaseReturnDetailResponse(PurchaseReturnResponse):
+    items: list[PurchaseReturnItemResponse] = []

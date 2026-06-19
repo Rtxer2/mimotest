@@ -8,6 +8,7 @@ from app.schemas.procurement import (
     PurchaseRequestCreate, PurchaseRequestResponse, PurchaseRequestDetailResponse,
     PurchaseOrderCreate, PurchaseOrderResponse, PurchaseOrderDetailResponse,
     ReceiveItem,
+    PurchaseReturnCreate, PurchaseReturnResponse, PurchaseReturnDetailResponse,
 )
 from app.services.procurement_service import ProcurementService
 
@@ -132,3 +133,35 @@ def delete_order(order_id: int, db: Session = Depends(get_db_session), current_u
     if not service.delete_order(order_id):
         raise HTTPException(status_code=404, detail="Purchase order not found")
     return {"message": "Purchase order deleted"}
+
+
+# === Purchase Returns ===
+
+@router.get("/returns", response_model=list[PurchaseReturnResponse])
+def list_returns(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), order_id: int | None = None, db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = ProcurementService(db)
+    return service.list_returns(skip=skip, limit=limit, order_id=order_id)
+
+
+@router.get("/returns/{return_id}", response_model=PurchaseReturnDetailResponse)
+def get_return(return_id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = ProcurementService(db)
+    ret = service.get_return_detail(return_id)
+    if not ret:
+        raise HTTPException(status_code=404, detail="Purchase return not found")
+    return ret
+
+
+@router.post("/returns", response_model=PurchaseReturnResponse)
+def create_return(data: PurchaseReturnCreate, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = ProcurementService(db)
+    return service.create_return(data, user_id=current_user.id)
+
+
+@router.post("/returns/{return_id}/complete", response_model=PurchaseReturnResponse)
+def complete_return(return_id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = ProcurementService(db)
+    ret = service.complete_return(return_id)
+    if not ret:
+        raise HTTPException(status_code=404, detail="Purchase return not found")
+    return ret

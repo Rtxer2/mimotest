@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.models.procurement import (
     Supplier, PurchaseRequest, PurchaseRequestItem,
-    PurchaseOrder, PurchaseOrderItem
+    PurchaseOrder, PurchaseOrderItem,
+    PurchaseReturn, PurchaseReturnItem
 )
 from app.models.inventory import Material
 from app.services.approval_service import ApprovalService
@@ -137,25 +138,32 @@ class ProcurementService:
         self.db.refresh(order)
         return order
 
-    def receive_items(self, order_id, items):
+    def receive_items(self, order_id, receive_data):
         order = self.get_order(order_id)
         if not order:
             return None, "Order not found"
-        for recv in items:
+        for recv in receive_data:
             item = self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == recv.item_id).first()
-            if item:
-                item.received_quantity += Decimal(str(recv.quantity))
-                material = self.db.query(Material).filter(Material.id == item.material_id).first()
-                if material:
-                    material.current_stock += Decimal(str(recv.quantity))
+            if not item:
+                continue
+            item.received_quantity += Decimal(str(recv.pass_quantity)) + Decimal(str(recv.reject_quantity))
+            if recv.pass_quantity > 0:
+                if item.item_type == "material" and item.material_id:
+                    material = self.db.query(Material).filter(Material.id == item.material_id).first()
+                    if material:
+                        material.current_stock += Decimal(str(recv.pass_quantity))
+                elif item.item_type == "product" and item.product_id:
+                    from app.models.inventory import FinishedProduct
+                    product = self.db.query(FinishedProduct).filter(FinishedProduct.id == item.product_id).first()
+                    if product:
+                        product.current_stock += int(recv.pass_quantity)
+        order.status = "inspecting"
         all_received = all(
             i.received_quantity >= i.quantity
             for i in self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.order_id == order_id).all()
         )
         if all_received:
             order.status = "received"
-        else:
-            order.status = "ordered"
         self.db.commit()
         self.db.refresh(order)
         return order, None
@@ -167,3 +175,43 @@ class ProcurementService:
         self.db.delete(order)
         self.db.commit()
         return True
+
+    # === Purchase Returns ===
+    def create_return(self, data, user_id):
+        return_no = f"RET-{uuid.uuid4().hex[:16].upper()}"
+        ret = PurchaseReturn(
+            return_no=return_no, order_id=data.order_id,
+            supplier_id=data.supplier_id, reason=data.reason, status="pending"
+        )
+        self.db.add(ret)
+        self.db.flush()
+        for item_data in data.items:
+            ret_item = PurchaseReturnItem(return_id=ret.id, **item_data.model_dump())
+            self.db.add(ret_item)
+            order_item = self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == item_data.order_item_id).first()
+            if order_item:
+                order_item.received_quantity -= Decimal(str(item_data.quantity))
+        self.db.commit()
+        self.db.refresh(ret)
+        return ret
+
+    def complete_return(self, return_id):
+        ret = self.db.query(PurchaseReturn).filter(PurchaseReturn.id == return_id).first()
+        if not ret:
+            return None
+        ret.status = "completed"
+        self.db.commit()
+        self.db.refresh(ret)
+        return ret
+
+    def list_returns(self, skip=0, limit=100, order_id=None):
+        q = self.db.query(PurchaseReturn)
+        if order_id:
+            q = q.filter(PurchaseReturn.order_id == order_id)
+        return q.order_by(PurchaseReturn.created_at.desc()).offset(skip).limit(limit).all()
+
+    def get_return_detail(self, id):
+        ret = self.db.query(PurchaseReturn).filter(PurchaseReturn.id == id).first()
+        if ret:
+            ret.items = self.db.query(PurchaseReturnItem).filter(PurchaseReturnItem.return_id == id).all()
+        return ret
