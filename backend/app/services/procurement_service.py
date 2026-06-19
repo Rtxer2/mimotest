@@ -266,11 +266,28 @@ class ProcurementService:
     def complete_return(self, return_id):
         ret = self.db.query(PurchaseReturn).filter(PurchaseReturn.id == return_id).first()
         if not ret:
-            return None
+            return None, "Return not found"
+        if ret.status == "completed":
+            return None, "Return already completed"
+        ret_items = self.db.query(PurchaseReturnItem).filter(PurchaseReturnItem.return_id == return_id).all()
+        for ret_item in ret_items:
+            order_item = self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == ret_item.order_item_id).first()
+            if not order_item:
+                continue
+            qty = Decimal(str(ret_item.quantity))
+            if order_item.item_type == "material" and order_item.material_id:
+                material = self.db.query(Material).filter(Material.id == order_item.material_id).first()
+                if material:
+                    material.current_stock = max(Decimal("0"), material.current_stock - qty)
+            elif order_item.item_type == "product" and order_item.product_id:
+                from app.models.inventory import FinishedProduct
+                product = self.db.query(FinishedProduct).filter(FinishedProduct.id == order_item.product_id).first()
+                if product:
+                    product.current_stock = max(0, product.current_stock - int(qty))
         ret.status = "completed"
         self.db.commit()
         self.db.refresh(ret)
-        return ret
+        return ret, None
 
     def list_returns(self, skip=0, limit=100, order_id=None):
         q = self.db.query(PurchaseReturn)

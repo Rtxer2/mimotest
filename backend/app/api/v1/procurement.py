@@ -243,7 +243,7 @@ def create_return(data: PurchaseReturnCreate, db: Session = Depends(get_db_sessi
 @router.post("/returns/{return_id}/complete", response_model=PurchaseReturnResponse)
 def complete_return(return_id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
     service = ProcurementService(db)
-    ret = service.complete_return(return_id)
-    if not ret:
-        raise HTTPException(status_code=404, detail="Purchase return not found")
+    ret, error = service.complete_return(return_id)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
     return ret
