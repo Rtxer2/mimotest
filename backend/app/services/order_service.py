@@ -62,7 +62,11 @@ class OrderService:
         )
 
         approval_service = ApprovalService(self.db)
-        context = {"min_amount": float(order.total_amount) if order.total_amount else 0}
+        total_quantity = sum(item.quantity for item in data.items)
+        context = {
+            "amount": float(order.total_amount) if order.total_amount else 0,
+            "quantity": total_quantity
+        }
         flow = approval_service.find_matching_flow("order", context)
         if flow:
             instance = approval_service.create_instance(

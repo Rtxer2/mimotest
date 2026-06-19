@@ -108,14 +108,19 @@ class ApprovalService:
 
         for flow in flows:
             if not flow.trigger_condition:
+                continue
+            condition_type = flow.trigger_condition.get("condition_type", "manual")
+            if condition_type == "manual":
+                continue
+            if condition_type == "always":
                 return flow
-            if context:
-                match = True
-                for key, value in flow.trigger_condition.items():
-                    if key not in context or context[key] < value:
-                        match = False
-                        break
-                if match:
+            if condition_type == "amount" and context:
+                threshold = flow.trigger_condition.get("threshold", 0)
+                if context.get("amount", 0) >= threshold:
+                    return flow
+            if condition_type == "quantity" and context:
+                threshold = flow.trigger_condition.get("threshold", 0)
+                if context.get("quantity", 0) >= threshold:
                     return flow
         return None
 
