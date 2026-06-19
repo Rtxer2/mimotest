@@ -267,10 +267,17 @@ const PurchaseOrderList = () => {
   const openReturnModal = async (order: PurchaseOrder) => {
     setReturnOrder(order);
     setReturnModalOpen(true);
-    returnForm.resetFields();
     try {
       const res = await procurementApi.getOrder(order.id);
-      setReturnItems(res.data.items || []);
+      const items = res.data.items || [];
+      setReturnItems(items);
+      returnForm.setFieldsValue({
+        items: items.map((item: PurchaseOrderItem) => ({
+          order_item_id: item.id,
+          quantity: item.received_quantity || item.quantity,
+          reason: '',
+        })),
+      });
     } catch {
       message.error(t('common.failed_to_load'));
     }

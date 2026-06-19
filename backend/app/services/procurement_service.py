@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from decimal import Decimal
 from sqlalchemy.orm import Session
 
@@ -8,7 +9,7 @@ from app.models.procurement import (
     PurchaseOrder, PurchaseOrderItem,
     PurchaseReturn, PurchaseReturnItem
 )
-from app.models.inventory import Material
+from app.models.inventory import Material, StockTransaction
 from app.services.approval_service import ApprovalService
 
 
@@ -173,11 +174,25 @@ class ProcurementService:
                     material = self.db.query(Material).filter(Material.id == item.material_id).first()
                     if material:
                         material.current_stock += Decimal(str(recv.pass_quantity))
+                        tx = StockTransaction(
+                            item_type="material", item_id=material.id,
+                            transaction_type="in", quantity=Decimal(str(recv.pass_quantity)),
+                            reason=f"采购验收入库 订单 {order.order_no}",
+                            transaction_date=datetime.utcnow()
+                        )
+                        self.db.add(tx)
                 elif item.item_type == "product" and item.product_id:
                     from app.models.inventory import FinishedProduct
                     product = self.db.query(FinishedProduct).filter(FinishedProduct.id == item.product_id).first()
                     if product:
                         product.current_stock += int(recv.pass_quantity)
+                        tx = StockTransaction(
+                            item_type="product", item_id=product.id,
+                            transaction_type="in", quantity=Decimal(str(recv.pass_quantity)),
+                            reason=f"采购验收入库 订单 {order.order_no}",
+                            transaction_date=datetime.utcnow()
+                        )
+                        self.db.add(tx)
         order.status = "inspecting"
         all_received = all(
             i.received_quantity >= i.quantity
@@ -222,7 +237,7 @@ class ProcurementService:
         order = self.get_order(order_id)
         if not order:
             return None, "Order not found"
-        if order.status in ("received", "cancelled"):
+        if order.status in ("received", "cancelled", "returned"):
             return None, f"Order already '{order.status}'"
         items = self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.order_id == order_id).all()
         for item in items:
@@ -233,11 +248,25 @@ class ProcurementService:
                 material = self.db.query(Material).filter(Material.id == item.material_id).first()
                 if material:
                     material.current_stock += remaining
+                    tx = StockTransaction(
+                        item_type="material", item_id=material.id,
+                        transaction_type="in", quantity=remaining,
+                        reason=f"采购入库 订单 {order.order_no}",
+                        transaction_date=datetime.utcnow()
+                    )
+                    self.db.add(tx)
             elif item.item_type == "product" and item.product_id:
                 from app.models.inventory import FinishedProduct
                 product = self.db.query(FinishedProduct).filter(FinishedProduct.id == item.product_id).first()
                 if product:
                     product.current_stock += int(remaining)
+                    tx = StockTransaction(
+                        item_type="product", item_id=product.id,
+                        transaction_type="in", quantity=remaining,
+                        reason=f"采购入库 订单 {order.order_no}",
+                        transaction_date=datetime.utcnow()
+                    )
+                    self.db.add(tx)
             item.received_quantity = item.quantity
         order.status = "received"
         self.db.commit()
@@ -270,6 +299,8 @@ class ProcurementService:
         if ret.status == "completed":
             return None, "Return already completed"
         ret_items = self.db.query(PurchaseReturnItem).filter(PurchaseReturnItem.return_id == return_id).all()
+        if not ret_items:
+            return None, "Return has no items"
         for ret_item in ret_items:
             order_item = self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.id == ret_item.order_item_id).first()
             if not order_item:
@@ -279,11 +310,25 @@ class ProcurementService:
                 material = self.db.query(Material).filter(Material.id == order_item.material_id).first()
                 if material:
                     material.current_stock = max(Decimal("0"), material.current_stock - qty)
+                    tx = StockTransaction(
+                        item_type="material", item_id=material.id,
+                        transaction_type="out", quantity=qty,
+                        reason=f"采购退货 退货单 {ret.return_no}",
+                        transaction_date=datetime.utcnow()
+                    )
+                    self.db.add(tx)
             elif order_item.item_type == "product" and order_item.product_id:
                 from app.models.inventory import FinishedProduct
                 product = self.db.query(FinishedProduct).filter(FinishedProduct.id == order_item.product_id).first()
                 if product:
                     product.current_stock = max(0, product.current_stock - int(qty))
+                    tx = StockTransaction(
+                        item_type="product", item_id=product.id,
+                        transaction_type="out", quantity=qty,
+                        reason=f"采购退货 退货单 {ret.return_no}",
+                        transaction_date=datetime.utcnow()
+                    )
+                    self.db.add(tx)
         ret.status = "completed"
         order = self.db.query(PurchaseOrder).filter(PurchaseOrder.id == ret.order_id).first()
         if order:
