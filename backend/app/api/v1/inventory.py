@@ -18,6 +18,12 @@ router = APIRouter()
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "..", "uploads", "products")
 
 
+@router.get("/alerts")
+def get_alerts(db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = InventoryService(db)
+    return service.get_low_stock_alerts()
+
+
 @router.get("/materials", response_model=list[MaterialResponse])
 def list_materials(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
     service = InventoryService(db)

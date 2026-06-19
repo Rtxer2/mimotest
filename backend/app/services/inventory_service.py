@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models.inventory import Category, Material, FinishedProduct, StockTransaction
@@ -127,13 +128,24 @@ class InventoryService:
 
         if data.item_type == "material":
             material = self.get_material(data.item_id)
-            if material and material.current_stock < material.safety_stock:
+            if material and material.safety_stock > 0 and material.current_stock < material.safety_stock:
                 notification_service = NotificationService(self.db)
                 notification_service.create_notification(
                     event_type="inventory_low",
                     title=f"库存预警: {material.name}",
                     content=f"原材料 {material.name} 当前库存 {material.current_stock} 低于安全库存 {material.safety_stock}",
                     link="/inventory/materials",
+                    notification_type="inventory"
+                )
+        elif data.item_type == "product":
+            product = self.get_product(data.item_id)
+            if product and product.safety_stock > 0 and product.current_stock < product.safety_stock:
+                notification_service = NotificationService(self.db)
+                notification_service.create_notification(
+                    event_type="inventory_low",
+                    title=f"库存预警: {product.product_name}",
+                    content=f"成品 {product.product_name} 当前库存 {product.current_stock} 低于安全库存 {product.safety_stock}",
+                    link="/inventory/products",
                     notification_type="inventory"
                 )
 
@@ -146,3 +158,12 @@ class InventoryService:
         if item_id:
             query = query.filter(StockTransaction.item_id == item_id)
         return query.order_by(StockTransaction.transaction_date.desc()).offset(skip).limit(limit).all()
+
+    def get_low_stock_alerts(self):
+        materials = self.db.query(Material).filter(
+            and_(Material.safety_stock > 0, Material.current_stock < Material.safety_stock)
+        ).all()
+        products = self.db.query(FinishedProduct).filter(
+            and_(FinishedProduct.safety_stock > 0, FinishedProduct.current_stock < FinishedProduct.safety_stock)
+        ).all()
+        return {"materials": materials, "products": products}
