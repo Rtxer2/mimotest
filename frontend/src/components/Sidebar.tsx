@@ -12,6 +12,7 @@ import {
   BarChartOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 
 const { Sider } = Layout;
@@ -20,78 +21,79 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const hasRole = useAuthStore((state) => state.hasRole);
+  const { t } = useTranslation();
 
   const menuItems = [
     {
       key: '/',
       icon: <DashboardOutlined />,
-      label: 'Dashboard',
+      label: t('sidebar.dashboard'),
     },
     {
       key: '/analytics',
       icon: <BarChartOutlined />,
-      label: '数据大屏',
+      label: t('sidebar.analytics'),
     },
     {
       key: '/customers',
       icon: <UserOutlined />,
-      label: 'Customers',
+      label: t('sidebar.customers'),
     },
     {
       key: '/orders',
       icon: <ShoppingCartOutlined />,
-      label: 'Orders',
+      label: t('sidebar.orders'),
     },
     {
       key: '/production',
       icon: <ToolOutlined />,
-      label: 'Production',
+      label: t('sidebar.production'),
       children: [
-        { key: '/production/dashboard', label: 'Dashboard' },
-        { key: '/production/orders', label: 'Orders' },
+        { key: '/production/dashboard', label: t('sidebar.production_dashboard') },
+        { key: '/production/orders', label: t('sidebar.production_orders') },
       ],
     },
     {
       key: '/inventory',
       icon: <InboxOutlined />,
-      label: 'Inventory',
+      label: t('sidebar.inventory'),
       children: [
-        { key: '/inventory/materials', label: 'Materials' },
-        { key: '/inventory/products', label: 'Products' },
+        { key: '/inventory/materials', label: t('sidebar.materials') },
+        { key: '/inventory/products', label: t('sidebar.products') },
       ],
     },
     {
       key: '/quality',
       icon: <CheckCircleOutlined />,
-      label: 'Quality',
+      label: t('sidebar.quality'),
       children: [
-        { key: '/quality/inspections', label: 'Inspections' },
-        { key: '/quality/issues', label: 'Issues' },
+        { key: '/quality/inspections', label: t('sidebar.inspections') },
+        { key: '/quality/issues', label: t('sidebar.issues') },
       ],
     },
     {
       key: '/approvals',
       icon: <AuditOutlined />,
-      label: '审批管理',
+      label: t('sidebar.approvals'),
       children: [
-        { key: '/approvals/pending', label: '待我审批' },
-        { key: '/approvals/initiated', label: '我发起的' },
-        ...(hasRole('admin') ? [{ key: '/approvals/flows', label: '流程配置' }] : []),
+        { key: '/approvals/pending', label: t('sidebar.pending_approvals') },
+        { key: '/approvals/initiated', label: t('sidebar.initiated_approvals') },
+        ...(hasRole('admin') ? [{ key: '/approvals/flows', label: t('sidebar.flow_config') }] : []),
       ],
     },
     {
       key: '/notifications',
       icon: <BellOutlined />,
-      label: 'Notifications',
+      label: t('sidebar.notifications'),
     },
     {
       key: '/system',
       icon: <SettingOutlined />,
-      label: 'System',
+      label: t('sidebar.system'),
       children: [
-        ...(hasRole('admin') ? [{ key: '/system/users', label: 'User Management' }] : []),
-        { key: '/system/dict', label: 'Data Dictionary' },
-        { key: '/system/dashboard-config', label: '仪表盘配置' },
+        ...(hasRole('admin') ? [{ key: '/system/users', label: t('sidebar.user_management') }] : []),
+        { key: '/system/dict', label: t('sidebar.data_dictionary') },
+        { key: '/system/dashboard-config', label: t('sidebar.dashboard_config') },
       ],
     },
   ];
@@ -99,7 +101,7 @@ const Sidebar = () => {
   return (
     <Sider width={250} theme="dark">
       <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <h1 style={{ color: 'white', margin: 0, fontSize: 20 }}>ERP System</h1>
+        <h1 style={{ color: 'white', margin: 0, fontSize: 20 }}>{t('sidebar.erp_system')}</h1>
       </div>
       <Menu
         theme="dark"

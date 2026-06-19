@@ -2,12 +2,14 @@ import { useEffect } from 'react';
 import { Badge, Dropdown, List, Button, Typography, Empty } from 'antd';
 import { BellOutlined, CheckOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useNotificationStore } from '../store/notificationStore';
 
 const { Text } = Typography;
 
 const NotificationBell = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const {
     notifications,
     unreadCount,
@@ -34,16 +36,16 @@ const NotificationBell = () => {
   const dropdownContent = (
     <div style={{ width: 360, background: 'white', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
       <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text strong>Notifications</Text>
+        <Text strong>{t('notifications.notifications_label')}</Text>
         {unreadCount > 0 && (
           <Button type="link" size="small" icon={<CheckOutlined />} onClick={markAllAsRead}>
-            Mark all read
+            {t('notifications.mark_all_read_btn')}
           </Button>
         )}
       </div>
       <div style={{ maxHeight: 400, overflow: 'auto' }}>
         {notifications.length === 0 ? (
-          <Empty description="No notifications" style={{ padding: '24px 0' }} />
+          <Empty description={t('notifications.no_notifications')} style={{ padding: '24px 0' }} />
         ) : (
           <List
             dataSource={notifications.slice(0, 10)}
@@ -75,7 +77,7 @@ const NotificationBell = () => {
       </div>
       <div style={{ padding: '8px 16px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
         <Button type="link" onClick={() => navigate('/notifications')}>
-          View all notifications
+          {t('notifications.view_all')}
         </Button>
       </div>
     </div>
