@@ -11,6 +11,7 @@ const statusColors: Record<string, string> = {
   ordered: 'blue',
   inspecting: 'orange',
   received: 'green',
+  returned: 'red',
   cancelled: 'red',
 };
 

@@ -285,6 +285,9 @@ class ProcurementService:
                 if product:
                     product.current_stock = max(0, product.current_stock - int(qty))
         ret.status = "completed"
+        order = self.db.query(PurchaseOrder).filter(PurchaseOrder.id == ret.order_id).first()
+        if order:
+            order.status = "returned"
         self.db.commit()
         self.db.refresh(ret)
         return ret, None
