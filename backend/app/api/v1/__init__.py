@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, customers, orders, production, inventory, quality, dict, users, notifications, approvals, analytics, preferences, reports, procurement
+from app.api.v1 import auth, customers, orders, production, inventory, quality, dict, users, notifications, approvals, analytics, preferences, reports, procurement, permissions
 
 api_router = APIRouter()
 
@@ -18,3 +18,4 @@ api_router.include_router(analytics.router, prefix="/analytics", tags=["analytic
 api_router.include_router(preferences.router, prefix="/preferences", tags=["preferences"])
 api_router.include_router(reports.router, prefix="/reports", tags=["reports"])
 api_router.include_router(procurement.router, prefix="/procurement", tags=["procurement"])
+api_router.include_router(permissions.router, prefix="/permissions", tags=["permissions"])

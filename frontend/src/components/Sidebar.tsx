@@ -21,100 +21,127 @@ const { Sider } = Layout;
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const hasRole = useAuthStore((state) => state.hasRole);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
   const { t } = useTranslation();
 
-  const menuItems = [
+  const allMenuItems = [
     {
       key: '/',
       icon: <DashboardOutlined />,
       label: t('sidebar.dashboard'),
+      permission: 'dashboard',
     },
     {
       key: '/analytics',
       icon: <BarChartOutlined />,
       label: t('sidebar.analytics'),
+      permission: 'analytics',
     },
     {
       key: '/customers',
       icon: <UserOutlined />,
       label: t('sidebar.customers'),
+      permission: 'customers',
       children: [
-        { key: '/customers', label: t('customers.customer_list') },
-        { key: '/customers/analytics', label: t('customers.analytics') },
+        { key: '/customers', label: t('customers.customer_list'), permission: 'customers' },
+        { key: '/customers/analytics', label: t('customers.analytics'), permission: 'customers.analytics' },
       ],
     },
     {
       key: '/orders',
       icon: <ShoppingCartOutlined />,
       label: t('sidebar.orders'),
+      permission: 'orders',
     },
     {
       key: '/production',
       icon: <ToolOutlined />,
       label: t('sidebar.production'),
+      permission: 'production',
       children: [
-        { key: '/production/dashboard', label: t('sidebar.production_dashboard') },
-        { key: '/production/orders', label: t('sidebar.production_orders') },
+        { key: '/production/dashboard', label: t('sidebar.production_dashboard'), permission: 'production' },
+        { key: '/production/orders', label: t('sidebar.production_orders'), permission: 'production' },
       ],
     },
     {
       key: '/inventory',
       icon: <InboxOutlined />,
       label: t('sidebar.inventory'),
+      permission: 'inventory',
       children: [
-        { key: '/inventory/materials', label: t('sidebar.materials') },
-        { key: '/inventory/products', label: t('sidebar.products') },
-        { key: '/inventory/alerts', label: t('sidebar.inventory_alerts') },
+        { key: '/inventory/materials', label: t('sidebar.materials'), permission: 'inventory' },
+        { key: '/inventory/products', label: t('sidebar.products'), permission: 'inventory' },
+        { key: '/inventory/alerts', label: t('sidebar.inventory_alerts'), permission: 'inventory.alerts' },
       ],
     },
     {
       key: '/quality',
       icon: <CheckCircleOutlined />,
       label: t('sidebar.quality'),
+      permission: 'quality',
       children: [
-        { key: '/quality/inspections', label: t('sidebar.inspections') },
-        { key: '/quality/issues', label: t('sidebar.issues') },
+        { key: '/quality/inspections', label: t('sidebar.inspections'), permission: 'quality' },
+        { key: '/quality/issues', label: t('sidebar.issues'), permission: 'quality' },
       ],
     },
     {
       key: '/approvals',
       icon: <AuditOutlined />,
       label: t('sidebar.approvals'),
+      permission: 'approvals',
       children: [
-        { key: '/approvals/pending', label: t('sidebar.pending_approvals') },
-        { key: '/approvals/initiated', label: t('sidebar.initiated_approvals') },
-        ...(hasRole('admin') ? [{ key: '/approvals/flows', label: t('sidebar.flow_config') }] : []),
+        { key: '/approvals/pending', label: t('sidebar.pending_approvals'), permission: 'approvals' },
+        { key: '/approvals/initiated', label: t('sidebar.initiated_approvals'), permission: 'approvals' },
+        ...(hasPermission('approvals.flows') ? [{ key: '/approvals/flows', label: t('sidebar.flow_config'), permission: 'approvals.flows' }] : []),
       ],
     },
     {
       key: '/procurement',
       icon: <ShoppingOutlined />,
       label: t('procurement.title'),
+      permission: 'procurement',
       children: [
-        { key: '/procurement/suppliers', label: t('procurement.suppliers') },
-        { key: '/procurement/requests', label: t('procurement.requests') },
-        { key: '/procurement/orders', label: t('procurement.orders') },
-        { key: '/procurement/returns', label: t('procurement.returns') },
+        { key: '/procurement/suppliers', label: t('procurement.suppliers'), permission: 'procurement' },
+        { key: '/procurement/requests', label: t('procurement.requests'), permission: 'procurement' },
+        { key: '/procurement/orders', label: t('procurement.orders'), permission: 'procurement' },
+        { key: '/procurement/returns', label: t('procurement.returns'), permission: 'procurement' },
       ],
     },
     {
       key: '/notifications',
       icon: <BellOutlined />,
       label: t('sidebar.notifications'),
+      permission: 'notifications',
     },
     {
       key: '/system',
       icon: <SettingOutlined />,
       label: t('sidebar.system'),
+      permission: 'system.dict',
       children: [
-        ...(hasRole('admin') ? [{ key: '/system/users', label: t('sidebar.user_management') }] : []),
-        { key: '/system/dict', label: t('sidebar.data_dictionary') },
-        { key: '/system/dashboard-config', label: t('sidebar.dashboard_config') },
-        { key: '/system/reports', label: t('sidebar.report_export') },
+        ...(hasPermission('system.users') ? [{ key: '/system/users', label: t('sidebar.user_management'), permission: 'system.users' }] : []),
+        { key: '/system/dict', label: t('sidebar.data_dictionary'), permission: 'system.dict' },
+        { key: '/system/dashboard-config', label: t('sidebar.dashboard_config'), permission: 'system.dashboard_config' },
+        { key: '/system/reports', label: t('sidebar.report_export'), permission: 'system.reports' },
       ],
     },
   ];
+
+  const filterItems = (items: any[]): any[] => {
+    return items
+      .filter((item) => hasPermission(item.permission))
+      .map((item) => {
+        if (item.children) {
+          const filteredChildren = filterItems(item.children);
+          if (filteredChildren.length === 0) return null;
+          return { ...item, children: filteredChildren };
+        }
+        return item;
+      })
+      .filter(Boolean);
+  };
+
+  const menuItems = filterItems(allMenuItems);
 
   return (
     <Sider width={250} theme="dark">

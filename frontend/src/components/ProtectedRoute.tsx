@@ -11,12 +11,13 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const fetchProfile = useAuthStore((state) => state.fetchProfile);
+  const fetchPermissions = useAuthStore((state) => state.fetchPermissions);
 
   useEffect(() => {
     if (token && !user) {
-      fetchProfile();
+      fetchProfile().then(() => fetchPermissions());
     }
-  }, [token, user, fetchProfile]);
+  }, [token, user, fetchProfile, fetchPermissions]);
 
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
