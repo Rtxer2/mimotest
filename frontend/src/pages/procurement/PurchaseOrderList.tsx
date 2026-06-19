@@ -102,15 +102,27 @@ const PurchaseOrderList = () => {
   const handleCreate = async (values: any) => {
     setSubmitting(true);
     try {
-      const items = (values.items || []).map((item: any, index: number) => {
+      const items = await Promise.all((values.items || []).map(async (item: any, index: number) => {
         const itemType = item.item_type || 'material';
         if (itemType === 'product') {
-          const product = selectedProducts[index];
+          let product = selectedProducts[index];
+          if (!product && item.product_name) {
+            try {
+              const res = await inventoryApi.quickCreateProduct(item.product_name);
+              product = res.data;
+            } catch {}
+          }
           return { item_type: 'product', material_id: null, product_id: product?.id || null, quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
         }
-        const material = selectedMaterials[index];
+        let material = selectedMaterials[index];
+        if (!material && item.material_name) {
+          try {
+            const res = await inventoryApi.quickCreateMaterial(item.material_name);
+            material = res.data;
+          } catch {}
+        }
         return { item_type: 'material', material_id: material?.id || null, product_id: null, quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
-      });
+      }));
       await procurementApi.createOrder({
         supplier_id: selectedSupplierId || values.supplier_id,
         request_id: values.request_id,
@@ -160,15 +172,21 @@ const PurchaseOrderList = () => {
     if (!editingOrder) return;
     setSubmitting(true);
     try {
-      const items = (values.items || []).map((item: any, index: number) => {
+      const items = await Promise.all((values.items || []).map(async (item: any, index: number) => {
         const itemType = item.item_type || 'material';
         if (itemType === 'product') {
-          const product = selectedProducts[index];
-          return { item_type: 'product', material_id: null, product_id: product?.id || Number(item.product_id), quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
+          let product = selectedProducts[index];
+          if (!product && item.product_name) {
+            try { const res = await inventoryApi.quickCreateProduct(item.product_name); product = res.data; } catch {}
+          }
+          return { item_type: 'product', material_id: null, product_id: product?.id || Number(item.product_id) || null, quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
         }
-        const material = selectedMaterials[index];
-        return { item_type: 'material', material_id: material?.id || Number(item.material_id), product_id: null, quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
-      });
+        let material = selectedMaterials[index];
+        if (!material && item.material_name) {
+          try { const res = await inventoryApi.quickCreateMaterial(item.material_name); material = res.data; } catch {}
+        }
+        return { item_type: 'material', material_id: material?.id || Number(item.material_id) || null, product_id: null, quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
+      }));
       await procurementApi.updateOrder(editingOrder.id, {
         supplier_id: selectedSupplierId || editingOrder.supplier_id,
         delivery_date: values.delivery_date,

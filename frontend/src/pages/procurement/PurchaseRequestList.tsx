@@ -104,10 +104,13 @@ const PurchaseRequestList = () => {
   const handleCreate = async (values: any) => {
     setSubmitting(true);
     try {
-      const items = (values.items || []).map((item: any, index: number) => {
+      const items = await Promise.all((values.items || []).map(async (item: any, index: number) => {
         const itemType = item.item_type || 'material';
         if (itemType === 'product') {
-          const product = selectedProducts[index];
+          let product = selectedProducts[index];
+          if (!product && item.product_name) {
+            try { const res = await inventoryApi.quickCreateProduct(item.product_name); product = res.data; } catch {}
+          }
           return {
             item_type: 'product',
             material_id: null,
@@ -116,7 +119,10 @@ const PurchaseRequestList = () => {
             unit_price: Number(item.unit_price),
           };
         }
-        const material = selectedMaterials[index];
+        let material = selectedMaterials[index];
+        if (!material && item.material_name) {
+          try { const res = await inventoryApi.quickCreateMaterial(item.material_name); material = res.data; } catch {}
+        }
         return {
           item_type: 'material',
           material_id: material?.id || null,
@@ -124,7 +130,7 @@ const PurchaseRequestList = () => {
           quantity: Number(item.quantity),
           unit_price: Number(item.unit_price),
         };
-      });
+      }));
       await procurementApi.createRequest({
         supplier_id: selectedSupplierId || values.supplier_id,
         remarks: values.remarks,
