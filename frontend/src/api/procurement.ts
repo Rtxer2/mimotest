@@ -130,6 +130,8 @@ export const procurementApi = {
     client.put<PurchaseOrder>(`/procurement/orders/${id}`, data),
   completeOrder: (id: number) =>
     client.post<PurchaseOrder>(`/procurement/orders/${id}/complete`),
+  deleteOrder: (id: number) =>
+    client.delete(`/procurement/orders/${id}`),
 
   listReturns: (params?: { skip?: number; limit?: number; order_id?: number }) =>
     client.get<PurchaseReturn[]>('/procurement/returns', { params }),

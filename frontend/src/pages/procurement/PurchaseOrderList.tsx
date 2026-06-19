@@ -278,6 +278,19 @@ const PurchaseOrderList = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!editingOrder) return;
+    try {
+      await procurementApi.deleteOrder(editingOrder.id);
+      message.success(t('common.delete'));
+      setModalOpen(false);
+      setEditingOrder(null);
+      loadData();
+    } catch (error: any) {
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
+    }
+  };
+
   const columns = [
     { title: t('procurement.order_no'), dataIndex: 'order_no', key: 'order_no' },
     { title: t('procurement.supplier_name'), dataIndex: 'supplier_name', key: 'supplier_name' },
@@ -345,6 +358,13 @@ const PurchaseOrderList = () => {
         onOk={() => form.submit()}
         confirmLoading={submitting}
         width={640}
+        footer={editingOrder ? [
+          <Popconfirm key="delete" title={t('common.confirm')} onConfirm={handleDelete}>
+            <Button danger icon={<DeleteOutlined />}>{t('common.delete')}</Button>
+          </Popconfirm>,
+          <Button key="cancel" onClick={() => { setModalOpen(false); setEditingOrder(null); }}>{t('common.cancel')}</Button>,
+          <Button key="ok" type="primary" loading={submitting} onClick={() => form.submit()}>{t('common.save')}</Button>,
+        ] : undefined}
       >
         <Form form={form} layout="vertical" onFinish={editingOrder ? handleEdit : handleCreate}>
           <Form.Item name="supplier_name" label={t('procurement.supplier_name')} rules={[{ required: true }]}>
