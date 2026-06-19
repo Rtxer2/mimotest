@@ -15,3 +15,12 @@ def get_dashboard(
 ):
     service = AnalyticsService(db)
     return service.get_dashboard()
+
+
+@router.get("/customers")
+def get_customer_analytics(
+    db: Session = Depends(get_db_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    service = AnalyticsService(db)
+    return service.get_customer_analytics()

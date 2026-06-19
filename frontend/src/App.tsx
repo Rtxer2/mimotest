@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import CustomerList from './pages/customers/CustomerList';
 import CustomerDetail from './pages/customers/CustomerDetail';
+import CustomerAnalytics from './pages/customers/CustomerAnalytics';
 import OrderList from './pages/orders/OrderList';
 import OrderDetail from './pages/orders/OrderDetail';
 import CreateOrder from './pages/orders/CreateOrder';
@@ -40,6 +41,7 @@ function App() {
         <Route path="analytics" element={<AnalyticsDashboard />} />
         <Route path="customers" element={<CustomerList />} />
         <Route path="customers/:id" element={<CustomerDetail />} />
+        <Route path="customers/analytics" element={<CustomerAnalytics />} />
         <Route path="orders" element={<OrderList />} />
         <Route path="orders/create" element={<CreateOrder />} />
         <Route path="orders/:id" element={<OrderDetail />} />

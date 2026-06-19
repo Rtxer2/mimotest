@@ -39,6 +39,10 @@ const Sidebar = () => {
       key: '/customers',
       icon: <UserOutlined />,
       label: t('sidebar.customers'),
+      children: [
+        { key: '/customers', label: t('customers.customer_list') },
+        { key: '/customers/analytics', label: t('customers.analytics') },
+      ],
     },
     {
       key: '/orders',

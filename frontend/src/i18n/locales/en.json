@@ -155,7 +155,22 @@
     "follow_up_add_failed": "Failed to add follow-up",
     "position": "Position",
     "primary": "Primary",
-    "next_follow": "Next Follow"
+    "next_follow": "Next Follow",
+    "analytics": "Customer Analytics",
+    "customer_list": "Customer List",
+    "total_customers": "Total Customers",
+    "new_this_month": "New This Month",
+    "growth_trend": "Customer Growth Trend",
+    "new_customers": "New Customers",
+    "value_ranking": "Customer Value Ranking",
+    "order_count": "Orders",
+    "total_amount": "Total Amount",
+    "activity": "Customer Activity",
+    "last_order": "Last Order",
+    "active": "Active",
+    "inactive": "Inactive",
+    "dormant": "Dormant",
+    "new_customer": "New"
   },
   "orders": {
     "title": "Orders",

@@ -171,3 +171,75 @@ class AnalyticsService:
             if row.status in result:
                 result[row.status] = row.count
         return result
+
+    def get_customer_analytics(self):
+        from datetime import timedelta
+        total = self.db.query(func.count(Customer.id)).scalar() or 0
+        now = datetime.utcnow()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        new_this_month = self.db.query(func.count(Customer.id)).filter(
+            Customer.created_at >= month_start
+        ).scalar() or 0
+
+        value_rows = self.db.query(
+            Customer.id, Customer.name, Customer.level,
+            func.count(Order.id).label("order_count"),
+            func.coalesce(func.sum(Order.total_amount), 0).label("total_amount"),
+        ).outerjoin(Order, Order.customer_id == Customer.id).group_by(
+            Customer.id
+        ).order_by(func.sum(Order.total_amount).desc().nullslast()).limit(20).all()
+
+        value_ranking = [
+            {"id": r.id, "name": r.name, "level": r.level or "",
+             "order_count": r.order_count, "total_amount": float(r.total_amount or 0)}
+            for r in value_rows
+        ]
+
+        growth_rows = self.db.query(
+            extract("year", Customer.created_at).label("year"),
+            extract("month", Customer.created_at).label("month"),
+            func.count(Customer.id).label("count"),
+        ).group_by("year", "month").order_by("year", "month").limit(12).all()
+
+        growth_trend = [
+            {"period": f"{int(r.year)}-{int(r.month):02d}", "count": r.count}
+            for r in growth_rows
+        ]
+
+        last_order_sub = self.db.query(
+            Order.customer_id,
+            func.max(Order.created_at).label("last_order_date"),
+            func.count(Order.id).label("order_count"),
+        ).group_by(Order.customer_id).subquery()
+
+        activity_rows = self.db.query(
+            Customer.id, Customer.name,
+            last_order_sub.c.last_order_date,
+            last_order_sub.c.order_count,
+        ).outerjoin(last_order_sub, last_order_sub.c.customer_id == Customer.id).all()
+
+        activity = []
+        for r in activity_rows:
+            last = r.last_order_date
+            if last is None:
+                status = "new"
+            elif (now - last).days > 90:
+                status = "dormant"
+            elif (now - last).days > 30:
+                status = "inactive"
+            else:
+                status = "active"
+            activity.append({
+                "id": r.id, "name": r.name,
+                "last_order_date": str(last)[:10] if last else "-",
+                "order_count": r.order_count or 0,
+                "status": status,
+            })
+
+        return {
+            "total_customers": total,
+            "new_this_month": new_this_month,
+            "value_ranking": value_ranking,
+            "growth_trend": growth_trend,
+            "activity": activity,
+        }

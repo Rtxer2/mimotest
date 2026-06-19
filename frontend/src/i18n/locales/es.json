@@ -155,7 +155,22 @@
     "follow_up_add_failed": "Error al agregar seguimiento",
     "position": "Cargo",
     "primary": "Principal",
-    "next_follow": "Próximo seguimiento"
+    "next_follow": "Próximo seguimiento",
+    "analytics": "Análisis de Clientes",
+    "customer_list": "Lista de Clientes",
+    "total_customers": "Total de Clientes",
+    "new_this_month": "Nuevos Este Mes",
+    "growth_trend": "Tendencia de Crecimiento",
+    "new_customers": "Nuevos Clientes",
+    "value_ranking": "Ranking de Valor",
+    "order_count": "Pedidos",
+    "total_amount": "Monto Total",
+    "activity": "Actividad del Cliente",
+    "last_order": "Último Pedido",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "dormant": "Durmiente",
+    "new_customer": "Nuevo"
   },
   "orders": {
     "title": "Pedidos",

@@ -155,7 +155,22 @@
     "follow_up_add_failed": "添加跟进记录失败",
     "position": "职位",
     "primary": "主要联系人",
-    "next_follow": "下次跟进"
+    "next_follow": "下次跟进",
+    "analytics": "客户分析",
+    "customer_list": "客户列表",
+    "total_customers": "客户总数",
+    "new_this_month": "本月新增",
+    "growth_trend": "客户增长趋势",
+    "new_customers": "新增客户",
+    "value_ranking": "客户价值排名",
+    "order_count": "订单数",
+    "total_amount": "累计金额",
+    "activity": "客户活跃度",
+    "last_order": "最近下单",
+    "active": "活跃",
+    "inactive": "不活跃",
+    "dormant": "沉睡",
+    "new_customer": "新客户"
   },
   "orders": {
     "title": "订单管理",
