@@ -48,4 +48,7 @@ export const orderApi = {
 
   updateStatus: (id: number, status: string) =>
     client.put<Order>(`/orders/${id}/status`, null, { params: { status } }),
+
+  submitForApproval: (id: number) =>
+    client.post<Order>(`/orders/${id}/submit-approval`),
 };
