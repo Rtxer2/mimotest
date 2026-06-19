@@ -95,6 +95,7 @@ const Sidebar = () => {
         ...(hasRole('admin') ? [{ key: '/system/users', label: t('sidebar.user_management') }] : []),
         { key: '/system/dict', label: t('sidebar.data_dictionary') },
         { key: '/system/dashboard-config', label: t('sidebar.dashboard_config') },
+        { key: '/system/reports', label: t('sidebar.report_export') },
       ],
     },
   ];

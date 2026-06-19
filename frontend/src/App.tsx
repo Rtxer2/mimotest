@@ -25,6 +25,7 @@ import ApprovalDetail from './pages/approvals/ApprovalDetail';
 import FlowConfig from './pages/approvals/FlowConfig';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import DashboardConfigPage from './pages/system/DashboardConfig';
+import ReportExport from './pages/system/ReportExport';
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
         <Route path="system/dict" element={<DictList />} />
         <Route path="system/users" element={<UserList />} />
         <Route path="system/dashboard-config" element={<DashboardConfigPage />} />
+        <Route path="system/reports" element={<ReportExport />} />
         <Route path="notifications" element={<NotificationList />} />
         <Route path="approvals/pending" element={<PendingList />} />
         <Route path="approvals/initiated" element={<InitiatedList />} />

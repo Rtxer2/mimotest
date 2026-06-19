@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Space, Tag } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Tag, message } from 'antd';
+import { PlusOutlined, FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { orderApi, Order } from '../../api/orders';
+import { reportApi } from '../../api/reports';
 
 const statusColors: Record<string, string> = {
   pending: 'default',
@@ -34,6 +35,23 @@ const OrderList = () => {
   useEffect(() => {
     loadOrders();
   }, []);
+
+  const handleExport = async (format: string) => {
+    try {
+      const res = await reportApi.export('orders', format);
+      const blob = new Blob([res.data]);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orders_report.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      message.error(t('reports.export_failed'));
+    }
+  };
 
   const STATUS_LABELS: Record<string, string> = {
     pending: t('orders.status_pending'),
@@ -78,6 +96,8 @@ const OrderList = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2>{t('orders.title')}</h2>
         <Space>
+          <Button icon={<FileExcelOutlined />} onClick={() => handleExport('xlsx')}>{t('reports.excel')}</Button>
+          <Button icon={<FilePdfOutlined />} onClick={() => handleExport('pdf')}>{t('reports.pdf')}</Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/orders/create')}>
             {t('orders.create_order')}
           </Button>

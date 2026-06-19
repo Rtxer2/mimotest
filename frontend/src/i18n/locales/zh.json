@@ -67,6 +67,7 @@
     "user_management": "用户管理",
     "data_dictionary": "数据字典",
     "dashboard_config": "仪表盘配置",
+    "report_export": "报表导出",
     "erp_system": "ERP系统"
   },
   "layout": {
@@ -450,5 +451,18 @@
     "production_order_stats": "生产工单统计",
     "inventory_overview": "库存概览",
     "approval_overview": "审批概览"
+  },
+  "reports": {
+    "title": "报表导出",
+    "orders": "订单报表",
+    "production": "生产报表",
+    "quality": "质量报表",
+    "inventory": "库存报表",
+    "export_excel": "导出 Excel",
+    "export_pdf": "导出 PDF",
+    "export_success": "导出成功",
+    "export_failed": "导出失败",
+    "excel": "Excel",
+    "pdf": "PDF"
   }
 }

@@ -67,6 +67,7 @@
     "user_management": "Gestión de usuarios",
     "data_dictionary": "Diccionario de datos",
     "dashboard_config": "Config. del panel",
+    "report_export": "Exportar Reportes",
     "erp_system": "Sistema ERP"
   },
   "layout": {
@@ -450,5 +451,18 @@
     "production_order_stats": "Estadísticas de órdenes de producción",
     "inventory_overview": "Resumen de inventario",
     "approval_overview": "Resumen de aprobaciones"
+  },
+  "reports": {
+    "title": "Exportar Reportes",
+    "orders": "Informe de Pedidos",
+    "production": "Informe de Producción",
+    "quality": "Informe de Calidad",
+    "inventory": "Informe de Inventario",
+    "export_excel": "Exportar Excel",
+    "export_pdf": "Exportar PDF",
+    "export_success": "Exportación exitosa",
+    "export_failed": "Error en exportación",
+    "excel": "Excel",
+    "pdf": "PDF"
   }
 }

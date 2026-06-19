@@ -67,6 +67,7 @@
     "user_management": "User Management",
     "data_dictionary": "Data Dictionary",
     "dashboard_config": "Dashboard Config",
+    "report_export": "Report Export",
     "erp_system": "ERP System"
   },
   "layout": {
@@ -450,5 +451,18 @@
     "production_order_stats": "Production Order Stats",
     "inventory_overview": "Inventory Overview",
     "approval_overview": "Approval Overview"
+  },
+  "reports": {
+    "title": "Report Export",
+    "orders": "Orders Report",
+    "production": "Production Report",
+    "quality": "Quality Report",
+    "inventory": "Inventory Report",
+    "export_excel": "Export Excel",
+    "export_pdf": "Export PDF",
+    "export_success": "Export successful",
+    "export_failed": "Export failed",
+    "excel": "Excel",
+    "pdf": "PDF"
   }
 }
