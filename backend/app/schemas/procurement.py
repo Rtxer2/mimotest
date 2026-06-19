@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class SupplierBase(BaseModel):
-    code: str = ""
+    code: str | None = ""
     name: str
     contact_person: str = ""
     phone: str = ""
@@ -35,7 +35,7 @@ class SupplierResponse(SupplierBase):
 
 
 class DepartmentBase(BaseModel):
-    code: str = ""
+    code: str | None = ""
     name: str
 
 
@@ -52,7 +52,7 @@ class DepartmentResponse(DepartmentBase):
 
 
 class WarehouseBase(BaseModel):
-    code: str = ""
+    code: str | None = ""
     name: str
     location: str = ""
 
