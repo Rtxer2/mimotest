@@ -34,6 +34,8 @@ const PurchaseOrderList = () => {
   const [returnForm] = Form.useForm();
   const [materialOptions, setMaterialOptions] = useState<any[]>([]);
   const [productOptions, setProductOptions] = useState<any[]>([]);
+  const [selectedMaterials, setSelectedMaterials] = useState<Record<number, any>>({});
+  const [selectedProducts, setSelectedProducts] = useState<Record<number, any>>({});
 
   const loadData = async () => {
     setLoading(true);
@@ -54,7 +56,7 @@ const PurchaseOrderList = () => {
       if (!q) { setMaterialOptions([]); return; }
       try {
         const res = await inventoryApi.searchMaterials(q);
-        setMaterialOptions(res.data.map((m) => ({ value: String(m.id), label: `${m.name} (${m.code})` })));
+        setMaterialOptions(res.data.map((m) => ({ value: m.name, label: `${m.name} (${m.code})`, data: m })));
       } catch { setMaterialOptions([]); }
     }, 300), []
   );
@@ -64,20 +66,39 @@ const PurchaseOrderList = () => {
       if (!q) { setProductOptions([]); return; }
       try {
         const res = await inventoryApi.searchProducts(q);
-        setProductOptions(res.data.map((p) => ({ value: String(p.id), label: `${p.product_name} (${p.sku})` })));
+        setProductOptions(res.data.map((p) => ({ value: p.product_name, label: `${p.product_name} (${p.sku})`, data: p })));
       } catch { setProductOptions([]); }
     }, 300), []
   );
 
+  const handleSelectMaterial = (fieldIndex: number, value: string) => {
+    const opt = materialOptions.find((o) => o.value === value);
+    if (opt?.data) setSelectedMaterials((prev) => ({ ...prev, [fieldIndex]: opt.data }));
+  };
+
+  const handleSelectProduct = (fieldIndex: number, value: string) => {
+    const opt = productOptions.find((o) => o.value === value);
+    if (opt?.data) setSelectedProducts((prev) => ({ ...prev, [fieldIndex]: opt.data }));
+  };
+
   const handleCreate = async (values: any) => {
     setSubmitting(true);
     try {
+      const items = (values.items || []).map((item: any, index: number) => {
+        const itemType = item.item_type || 'material';
+        if (itemType === 'product') {
+          const product = selectedProducts[index];
+          return { item_type: 'product', material_id: null, product_id: product?.id || null, quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
+        }
+        const material = selectedMaterials[index];
+        return { item_type: 'material', material_id: material?.id || null, product_id: null, quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
+      });
       await procurementApi.createOrder({
         supplier_id: values.supplier_id,
         request_id: values.request_id,
         delivery_date: values.delivery_date,
         remarks: values.remarks,
-        items: values.items || [],
+        items,
       });
       message.success(t('common.save'));
       setModalOpen(false);
@@ -214,7 +235,7 @@ const PurchaseOrderList = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2>{t('procurement.orders')}</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setModalOpen(true); }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedMaterials({}); setSelectedProducts({}); setModalOpen(true); }}>
           {t('procurement.create_order')}
         </Button>
       </div>
@@ -253,13 +274,16 @@ const PurchaseOrderList = () => {
                     <Form.Item shouldUpdate={(prev, cur) => prev.items?.[field.name]?.item_type !== cur.items?.[field.name]?.item_type} noStyle>
                       {({ getFieldValue }) => {
                         const itemType = getFieldValue(['items', field.name, 'item_type']) || 'material';
-                        return itemType === 'product' ? (
-                          <Form.Item {...field} name={[field.name, 'product_id']} rules={[{ required: true }]}>
-                            <AutoComplete options={productOptions} onSearch={searchProducts} placeholder={t('procurement.product')} style={{ width: 200 }} filterOption={false} />
-                          </Form.Item>
-                        ) : (
-                          <Form.Item {...field} name={[field.name, 'material_id']} rules={[{ required: true }]}>
-                            <AutoComplete options={materialOptions} onSearch={searchMaterials} placeholder={t('procurement.material')} style={{ width: 200 }} filterOption={false} />
+                        if (itemType === 'product') {
+                          return (
+                            <Form.Item {...field} name={[field.name, 'product_name']} rules={[{ required: true }]}>
+                              <AutoComplete options={productOptions} onSearch={searchProducts} onSelect={(val) => handleSelectProduct(field.name, val)} placeholder={t('procurement.product')} style={{ width: 200 }} filterOption={false} />
+                            </Form.Item>
+                          );
+                        }
+                        return (
+                          <Form.Item {...field} name={[field.name, 'material_name']} rules={[{ required: true }]}>
+                            <AutoComplete options={materialOptions} onSearch={searchMaterials} onSelect={(val) => handleSelectMaterial(field.name, val)} placeholder={t('procurement.material')} style={{ width: 200 }} filterOption={false} />
                           </Form.Item>
                         );
                       }}
