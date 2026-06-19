@@ -99,6 +99,7 @@ class PurchaseRequestResponse(BaseModel):
     id: int
     request_no: str
     supplier_id: int
+    supplier_name: str = ""
     status: str
     total_amount: float
     remarks: str
@@ -147,6 +148,7 @@ class PurchaseOrderResponse(BaseModel):
     order_no: str
     request_id: int | None
     supplier_id: int
+    supplier_name: str = ""
     status: str
     total_amount: float
     delivery_date: str

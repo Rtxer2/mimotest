@@ -35,7 +35,6 @@ const PurchaseOrderList = () => {
   const [materialOptions, setMaterialOptions] = useState<any[]>([]);
   const [productOptions, setProductOptions] = useState<any[]>([]);
   const [supplierOptions, setSupplierOptions] = useState<any[]>([]);
-  const [supplierMap, setSupplierMap] = useState<Record<number, string>>({});
   const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(null);
   const [selectedMaterials, setSelectedMaterials] = useState<Record<number, any>>({});
   const [selectedProducts, setSelectedProducts] = useState<Record<number, any>>({});
@@ -52,16 +51,7 @@ const PurchaseOrderList = () => {
     }
   };
 
-  useEffect(() => { loadData(); loadSuppliers(); }, []);
-
-  const loadSuppliers = async () => {
-    try {
-      const res = await procurementApi.listSuppliers({ limit: 200 });
-      const map: Record<number, string> = {};
-      res.data.forEach((s) => { map[s.id] = s.code ? `${s.code} - ${s.name}` : s.name; });
-      setSupplierMap(map);
-    } catch {}
-  };
+  useEffect(() => { loadData(); }, []);
 
   const searchSuppliers = useCallback(
     debounce(async (q: string) => {
@@ -221,7 +211,7 @@ const PurchaseOrderList = () => {
 
   const columns = [
     { title: t('procurement.order_no'), dataIndex: 'order_no', key: 'order_no' },
-    { title: t('procurement.supplier_name'), dataIndex: 'supplier_id', key: 'supplier_id', render: (id: number) => supplierMap[id] || id },
+    { title: t('procurement.supplier_name'), dataIndex: 'supplier_name', key: 'supplier_name' },
     {
       title: t('procurement.status'),
       dataIndex: 'status',

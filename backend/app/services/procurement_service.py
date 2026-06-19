@@ -57,11 +57,22 @@ class ProcurementService:
         return True
 
     # === Purchase Requests ===
+    def _enrich_with_supplier_name(self, items):
+        if not items:
+            return items
+        supplier_ids = list(set(item.supplier_id for item in items))
+        suppliers = self.db.query(Supplier).filter(Supplier.id.in_(supplier_ids)).all()
+        supplier_map = {s.id: s.name for s in suppliers}
+        for item in items:
+            item.supplier_name = supplier_map.get(item.supplier_id, "")
+        return items
+
     def list_requests(self, skip=0, limit=100, status=None):
         q = self.db.query(PurchaseRequest)
         if status:
             q = q.filter(PurchaseRequest.status == status)
-        return q.order_by(PurchaseRequest.created_at.desc()).offset(skip).limit(limit).all()
+        items = q.order_by(PurchaseRequest.created_at.desc()).offset(skip).limit(limit).all()
+        return self._enrich_with_supplier_name(items)
 
     def get_request(self, id):
         return self.db.query(PurchaseRequest).filter(PurchaseRequest.id == id).first()
@@ -120,7 +131,8 @@ class ProcurementService:
         q = self.db.query(PurchaseOrder)
         if status:
             q = q.filter(PurchaseOrder.status == status)
-        return q.order_by(PurchaseOrder.created_at.desc()).offset(skip).limit(limit).all()
+        items = q.order_by(PurchaseOrder.created_at.desc()).offset(skip).limit(limit).all()
+        return self._enrich_with_supplier_name(items)
 
     def get_order(self, id):
         return self.db.query(PurchaseOrder).filter(PurchaseOrder.id == id).first()
