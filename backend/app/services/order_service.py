@@ -111,3 +111,28 @@ class OrderService:
         )
 
         return order
+
+    def submit_for_approval(self, order_id: int, user_id: int):
+        order = self.get_order(order_id)
+        if not order:
+            return None, "Order not found"
+        if order.status != "pending":
+            return None, f"Order status is '{order.status}', cannot submit for approval"
+
+        approval_service = ApprovalService(self.db)
+        flows = approval_service.list_flows(business_type="order")
+        active_flows = [f for f in flows if f.is_active]
+        if not active_flows:
+            return None, "No active approval flow configured"
+
+        flow = active_flows[0]
+        instance = approval_service.create_instance(
+            flow_id=flow.id,
+            business_type="order",
+            business_id=order.id,
+            initiator_id=user_id
+        )
+        order.status = "pending_approval"
+        self.db.commit()
+        self.db.refresh(order)
+        return order, None

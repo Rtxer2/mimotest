@@ -49,6 +49,15 @@ def update_order(order_id: int, data: OrderUpdate, db: Session = Depends(get_db_
     return order
 
 
+@router.post("/{order_id}/submit-approval", response_model=OrderResponse)
+def submit_for_approval(order_id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = OrderService(db)
+    order, error = service.submit_for_approval(order_id, current_user.id)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+    return order
+
+
 @router.put("/{order_id}/status", response_model=OrderResponse)
 def update_status(order_id: int, status: str, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
     service = OrderService(db)
