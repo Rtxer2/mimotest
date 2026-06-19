@@ -62,7 +62,7 @@ def seed_approval_flows():
     order_flow = ApprovalFlow(
         name="订单审批流程",
         business_type="order",
-        trigger_condition={"min_amount": 10000},
+        trigger_condition={"condition_type": "amount", "threshold": 10000},
         is_active=True
     )
     db.add(order_flow)
@@ -78,7 +78,7 @@ def seed_approval_flows():
     prod_flow = ApprovalFlow(
         name="生产工单审批流程",
         business_type="production",
-        trigger_condition={},
+        trigger_condition={"condition_type": "always"},
         is_active=True
     )
     db.add(prod_flow)
