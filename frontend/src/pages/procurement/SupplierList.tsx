@@ -66,10 +66,12 @@ const SupplierList = () => {
 
   const filtered = data.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase()) ||
+    item.code?.toLowerCase().includes(search.toLowerCase()) ||
     item.contact_person?.toLowerCase().includes(search.toLowerCase())
   );
 
   const columns = [
+    { title: t('procurement.supplier_code'), dataIndex: 'code', key: 'code' },
     { title: t('procurement.supplier_name'), dataIndex: 'name', key: 'name' },
     { title: t('procurement.contact_person'), dataIndex: 'contact_person', key: 'contact_person' },
     { title: t('procurement.phone'), dataIndex: 'phone', key: 'phone' },
@@ -125,6 +127,9 @@ const SupplierList = () => {
         confirmLoading={submitting}
       >
         <Form form={form} layout="vertical" onFinish={handleSave}>
+          <Form.Item name="code" label={t('procurement.supplier_code')}>
+            <Input placeholder="Auto-generated if empty" />
+          </Form.Item>
           <Form.Item name="name" label={t('procurement.supplier_name')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>

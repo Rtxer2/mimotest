@@ -5,12 +5,26 @@ from app.models.base import BaseModel
 
 class Supplier(BaseModel):
     __tablename__ = "suppliers"
+    code = Column(String(50), unique=True, nullable=True)
     name = Column(String(200), nullable=False)
     contact_person = Column(String(100), default="")
     phone = Column(String(50), default="")
     email = Column(String(100), default="")
     address = Column(Text, default="")
     status = Column(String(20), default="active")
+
+
+class Department(BaseModel):
+    __tablename__ = "departments"
+    code = Column(String(50), unique=True, nullable=True)
+    name = Column(String(100), nullable=False)
+
+
+class Warehouse(BaseModel):
+    __tablename__ = "warehouses"
+    code = Column(String(50), unique=True, nullable=True)
+    name = Column(String(100), nullable=False)
+    location = Column(String(200), default="")
 
 
 class PurchaseRequest(BaseModel):

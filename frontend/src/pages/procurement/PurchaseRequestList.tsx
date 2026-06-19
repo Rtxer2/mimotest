@@ -51,7 +51,7 @@ const PurchaseRequestList = () => {
       if (!q) { setSupplierOptions([]); return; }
       try {
         const res = await procurementApi.searchSuppliers(q);
-        setSupplierOptions(res.data.map((s) => ({ value: s.name, label: `${s.name} (${s.contact_person})`, data: s })));
+        setSupplierOptions(res.data.map((s) => ({ value: s.name, label: `${s.code ? s.code + ' - ' : ''}${s.name}`, data: s })));
       } catch { setSupplierOptions([]); }
     }, 300), []
   );
@@ -67,7 +67,7 @@ const PurchaseRequestList = () => {
       try {
         const res = await inventoryApi.searchMaterials(q);
         setMaterialOptions(
-          res.data.map((m) => ({ value: m.name, label: `${m.name} (${m.code})`, data: m }))
+          res.data.map((m) => ({ value: m.name, label: `${m.code} - ${m.name}`, data: m }))
         );
       } catch { setMaterialOptions([]); }
     }, 300),
@@ -80,7 +80,7 @@ const PurchaseRequestList = () => {
       try {
         const res = await inventoryApi.searchProducts(q);
         setProductOptions(
-          res.data.map((p) => ({ value: p.product_name, label: `${p.product_name} (${p.sku})`, data: p }))
+          res.data.map((p) => ({ value: p.product_name, label: `${p.sku} - ${p.product_name}`, data: p }))
         );
       } catch { setProductOptions([]); }
     }, 300),

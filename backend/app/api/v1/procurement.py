@@ -5,6 +5,8 @@ from app.api.deps import get_db_session, require_any_role, require_operator_or_a
 from app.models.user import User
 from app.schemas.procurement import (
     SupplierCreate, SupplierUpdate, SupplierResponse,
+    DepartmentCreate, DepartmentResponse,
+    WarehouseCreate, WarehouseResponse,
     PurchaseRequestCreate, PurchaseRequestResponse, PurchaseRequestDetailResponse,
     PurchaseOrderCreate, PurchaseOrderResponse, PurchaseOrderDetailResponse,
     ReceiveItem,
@@ -59,6 +61,62 @@ def delete_supplier(supplier_id: int, db: Session = Depends(get_db_session), cur
     if not service.delete_supplier(supplier_id):
         raise HTTPException(status_code=404, detail="Supplier not found")
     return {"message": "Supplier deleted"}
+
+
+# === Departments ===
+
+@router.get("/departments/search", response_model=list[DepartmentResponse])
+def search_departments(q: str = Query("", min_length=0), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = ProcurementService(db)
+    return service.search_departments(q) if q else []
+
+
+@router.get("/departments", response_model=list[DepartmentResponse])
+def list_departments(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = ProcurementService(db)
+    return service.list_departments(skip=skip, limit=limit)
+
+
+@router.post("/departments", response_model=DepartmentResponse)
+def create_department(data: DepartmentCreate, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = ProcurementService(db)
+    return service.create_department(data)
+
+
+@router.delete("/departments/{id}")
+def delete_department(id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = ProcurementService(db)
+    if not service.delete_department(id):
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"message": "Deleted"}
+
+
+# === Warehouses ===
+
+@router.get("/warehouses/search", response_model=list[WarehouseResponse])
+def search_warehouses(q: str = Query("", min_length=0), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = ProcurementService(db)
+    return service.search_warehouses(q) if q else []
+
+
+@router.get("/warehouses", response_model=list[WarehouseResponse])
+def list_warehouses(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = ProcurementService(db)
+    return service.list_warehouses(skip=skip, limit=limit)
+
+
+@router.post("/warehouses", response_model=WarehouseResponse)
+def create_warehouse(data: WarehouseCreate, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = ProcurementService(db)
+    return service.create_warehouse(data)
+
+
+@router.delete("/warehouses/{id}")
+def delete_warehouse(id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = ProcurementService(db)
+    if not service.delete_warehouse(id):
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"message": "Deleted"}
 
 
 # === Purchase Requests ===

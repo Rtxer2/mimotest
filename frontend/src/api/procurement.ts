@@ -2,12 +2,28 @@ import client from './client';
 
 export interface Supplier {
   id: number;
+  code: string;
   name: string;
   contact_person: string;
   phone: string;
   email: string;
   address: string;
   status: string;
+  created_at: string;
+}
+
+export interface Department {
+  id: number;
+  code: string;
+  name: string;
+  created_at: string;
+}
+
+export interface Warehouse {
+  id: number;
+  code: string;
+  name: string;
+  location: string;
   created_at: string;
 }
 
@@ -115,4 +131,14 @@ export const procurementApi = {
     client.post<PurchaseReturn>('/procurement/returns', data),
   completeReturn: (id: number) =>
     client.post<PurchaseReturn>(`/procurement/returns/${id}/complete`),
+
+  searchDepartments: (q: string) =>
+    client.get<Department[]>('/procurement/departments/search', { params: { q } }),
+  createDepartment: (data: Partial<Department>) =>
+    client.post<Department>('/procurement/departments', data),
+
+  searchWarehouses: (q: string) =>
+    client.get<Warehouse[]>('/procurement/warehouses/search', { params: { q } }),
+  createWarehouse: (data: Partial<Warehouse>) =>
+    client.post<Warehouse>('/procurement/warehouses', data),
 };

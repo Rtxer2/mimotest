@@ -3,7 +3,8 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.models.procurement import (
-    Supplier, PurchaseRequest, PurchaseRequestItem,
+    Supplier, Department, Warehouse,
+    PurchaseRequest, PurchaseRequestItem,
     PurchaseOrder, PurchaseOrderItem,
     PurchaseReturn, PurchaseReturnItem
 )
@@ -20,13 +21,18 @@ class ProcurementService:
         return self.db.query(Supplier).offset(skip).limit(limit).all()
 
     def search_suppliers(self, q: str, limit: int = 20):
-        return self.db.query(Supplier).filter(Supplier.name.ilike(f"%{q}%")).limit(limit).all()
+        from sqlalchemy import or_
+        return self.db.query(Supplier).filter(
+            or_(Supplier.name.ilike(f"%{q}%"), Supplier.code.ilike(f"%{q}%"))
+        ).limit(limit).all()
 
     def get_supplier(self, id):
         return self.db.query(Supplier).filter(Supplier.id == id).first()
 
     def create_supplier(self, data):
         s = Supplier(**data.model_dump())
+        if not s.code:
+            s.code = f"SUP-{uuid.uuid4().hex[:8].upper()}"
         self.db.add(s)
         self.db.commit()
         self.db.refresh(s)
@@ -218,3 +224,57 @@ class ProcurementService:
         if ret:
             ret.items = self.db.query(PurchaseReturnItem).filter(PurchaseReturnItem.return_id == id).all()
         return ret
+
+    # === Departments ===
+    def list_departments(self, skip=0, limit=100):
+        return self.db.query(Department).offset(skip).limit(limit).all()
+
+    def search_departments(self, q: str, limit: int = 20):
+        from sqlalchemy import or_
+        return self.db.query(Department).filter(
+            or_(Department.name.ilike(f"%{q}%"), Department.code.ilike(f"%{q}%"))
+        ).limit(limit).all()
+
+    def create_department(self, data):
+        d = Department(**data.model_dump())
+        if not d.code:
+            d.code = f"DEPT-{uuid.uuid4().hex[:8].upper()}"
+        self.db.add(d)
+        self.db.commit()
+        self.db.refresh(d)
+        return d
+
+    def delete_department(self, id):
+        d = self.db.query(Department).filter(Department.id == id).first()
+        if not d:
+            return False
+        self.db.delete(d)
+        self.db.commit()
+        return True
+
+    # === Warehouses ===
+    def list_warehouses(self, skip=0, limit=100):
+        return self.db.query(Warehouse).offset(skip).limit(limit).all()
+
+    def search_warehouses(self, q: str, limit: int = 20):
+        from sqlalchemy import or_
+        return self.db.query(Warehouse).filter(
+            or_(Warehouse.name.ilike(f"%{q}%"), Warehouse.code.ilike(f"%{q}%"))
+        ).limit(limit).all()
+
+    def create_warehouse(self, data):
+        w = Warehouse(**data.model_dump())
+        if not w.code:
+            w.code = f"WH-{uuid.uuid4().hex[:8].upper()}"
+        self.db.add(w)
+        self.db.commit()
+        self.db.refresh(w)
+        return w
+
+    def delete_warehouse(self, id):
+        w = self.db.query(Warehouse).filter(Warehouse.id == id).first()
+        if not w:
+            return False
+        self.db.delete(w)
+        self.db.commit()
+        return True

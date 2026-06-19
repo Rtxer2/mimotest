@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 
 class SupplierBase(BaseModel):
+    code: str = ""
     name: str
     contact_person: str = ""
     phone: str = ""
@@ -16,6 +17,7 @@ class SupplierCreate(SupplierBase):
 
 
 class SupplierUpdate(BaseModel):
+    code: str | None = None
     name: str | None = None
     contact_person: str | None = None
     phone: str | None = None
@@ -25,6 +27,41 @@ class SupplierUpdate(BaseModel):
 
 
 class SupplierResponse(SupplierBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DepartmentBase(BaseModel):
+    code: str = ""
+    name: str
+
+
+class DepartmentCreate(DepartmentBase):
+    pass
+
+
+class DepartmentResponse(DepartmentBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class WarehouseBase(BaseModel):
+    code: str = ""
+    name: str
+    location: str = ""
+
+
+class WarehouseCreate(WarehouseBase):
+    pass
+
+
+class WarehouseResponse(WarehouseBase):
     id: int
     created_at: datetime
 
