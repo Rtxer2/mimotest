@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Drawer, message } from 'antd';
-import { PlusOutlined, DeleteOutlined, EyeOutlined, ImportOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message } from 'antd';
+import { PlusOutlined, DeleteOutlined, EyeOutlined, ImportOutlined, RollbackOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { procurementApi, PurchaseOrder, PurchaseOrderItem } from '../../api/procurement';
 
 const statusColors: Record<string, string> = {
   pending: 'default',
   ordered: 'blue',
+  inspecting: 'orange',
   received: 'green',
   cancelled: 'red',
 };
@@ -25,6 +26,10 @@ const PurchaseOrderList = () => {
   const [receiveItems, setReceiveItems] = useState<PurchaseOrderItem[]>([]);
   const [form] = Form.useForm();
   const [receiveForm] = Form.useForm();
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [returnOrder, setReturnOrder] = useState<PurchaseOrder | null>(null);
+  const [returnItems, setReturnItems] = useState<PurchaseOrderItem[]>([]);
+  const [returnForm] = Form.useForm();
 
   const loadData = async () => {
     setLoading(true);
@@ -89,15 +94,49 @@ const PurchaseOrderList = () => {
     if (!receivingOrderId) return;
     setSubmitting(true);
     try {
-      const items = receiveItems.map((item) => ({
+      const items = receiveItems.map((item, index) => ({
         item_id: item.id,
-        quantity: values[`qty_${item.id}`] || 0,
-      })).filter((i) => i.quantity > 0);
+        pass_quantity: values.items?.[index]?.pass_quantity || 0,
+        reject_quantity: values.items?.[index]?.reject_quantity || 0,
+      })).filter((i) => i.pass_quantity > 0 || i.reject_quantity > 0);
       await procurementApi.receiveItems(receivingOrderId, items);
       message.success(t('procurement.receive'));
       setReceiveModalOpen(false);
       setReceivingOrderId(null);
       loadData();
+    } catch (error: any) {
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openReturnModal = async (order: PurchaseOrder) => {
+    setReturnOrder(order);
+    setReturnModalOpen(true);
+    returnForm.resetFields();
+    try {
+      const res = await procurementApi.getOrder(order.id);
+      setReturnItems(res.data.items || []);
+    } catch {
+      message.error(t('common.failed_to_load'));
+    }
+  };
+
+  const handleReturn = async (values: any) => {
+    if (!returnOrder) return;
+    setSubmitting(true);
+    try {
+      const items = (values.items || []).filter((i: any) => i.quantity > 0);
+      await procurementApi.createReturn({
+        order_id: returnOrder.id,
+        supplier_id: returnOrder.supplier_id,
+        reason: values.reason,
+        items,
+      });
+      message.success(t('procurement.create_return'));
+      setReturnModalOpen(false);
+      setReturnOrder(null);
     } catch (error: any) {
       message.error(error?.response?.data?.detail || t('common.operation_failed'));
     } finally {
@@ -126,13 +165,17 @@ const PurchaseOrderList = () => {
           {record.status === 'ordered' && (
             <Button size="small" icon={<ImportOutlined />} onClick={() => openReceive(record.id)}>{t('procurement.receive')}</Button>
           )}
+          {(record.status === 'received' || record.status === 'inspecting') && (
+            <Button size="small" icon={<RollbackOutlined />} onClick={() => openReturnModal(record)}>{t('procurement.create_return')}</Button>
+          )}
         </Space>
       ),
     },
   ];
 
   const itemColumns = [
-    { title: t('procurement.material'), dataIndex: 'material_id', key: 'material_id' },
+    { title: t('procurement.material'), key: 'item_type', render: (_: any, record: PurchaseOrderItem) => record.item_type === 'material' ? t('procurement.material') : t('procurement.product') },
+    { title: 'ID', key: 'ref_id', render: (_: any, record: PurchaseOrderItem) => record.material_id ?? record.product_id },
     { title: t('procurement.quantity'), dataIndex: 'quantity', key: 'quantity' },
     { title: t('procurement.unit_price'), dataIndex: 'unit_price', key: 'unit_price', render: (val: number) => val?.toFixed(2) },
     { title: t('procurement.received_quantity'), dataIndex: 'received_quantity', key: 'received_quantity' },
@@ -180,8 +223,22 @@ const PurchaseOrderList = () => {
                 <div style={{ marginBottom: 8, fontWeight: 500 }}>{t('procurement.items')}</div>
                 {fields.map((field) => (
                   <Space key={field.key} align="baseline" style={{ display: 'flex', marginBottom: 8 }}>
-                    <Form.Item {...field} name={[field.name, 'material_id']} rules={[{ required: true }]}>
-                      <InputNumber placeholder={t('procurement.material')} />
+                    <Form.Item {...field} name={[field.name, 'item_type']} rules={[{ required: true }]}>
+                      <Select options={[{ value: 'material', label: t('procurement.material') }, { value: 'product', label: t('procurement.product') }]} style={{ width: 120 }} placeholder={t('procurement.material')} />
+                    </Form.Item>
+                    <Form.Item shouldUpdate={(prev, cur) => prev.items?.[field.name]?.item_type !== cur.items?.[field.name]?.item_type} noStyle>
+                      {({ getFieldValue }) => {
+                        const itemType = getFieldValue(['items', field.name, 'item_type']);
+                        return itemType === 'product' ? (
+                          <Form.Item {...field} name={[field.name, 'product_id']} rules={[{ required: true }]}>
+                            <InputNumber placeholder={t('procurement.product')} />
+                          </Form.Item>
+                        ) : (
+                          <Form.Item {...field} name={[field.name, 'material_id']} rules={[{ required: true }]}>
+                            <InputNumber placeholder={t('procurement.material')} />
+                          </Form.Item>
+                        );
+                      }}
                     </Form.Item>
                     <Form.Item {...field} name={[field.name, 'quantity']} rules={[{ required: true }]}>
                       <InputNumber placeholder={t('procurement.quantity')} min={1} />
@@ -216,13 +273,71 @@ const PurchaseOrderList = () => {
         onCancel={() => { setReceiveModalOpen(false); setReceivingOrderId(null); }}
         onOk={() => receiveForm.submit()}
         confirmLoading={submitting}
+        width={640}
       >
         <Form form={receiveForm} layout="vertical" onFinish={handleReceive}>
-          {receiveItems.map((item) => (
-            <Form.Item key={item.id} name={`qty_${item.id}`} label={`${t('procurement.material')} #${item.material_id} (${t('procurement.quantity')}: ${item.quantity})`}>
-              <InputNumber min={0} max={item.quantity - item.received_quantity} style={{ width: '100%' }} />
-            </Form.Item>
-          ))}
+          <Form.List name="items">
+            {() => (
+              <>
+                {receiveItems.map((item, index) => (
+                  <Space key={item.id} align="baseline" style={{ display: 'flex', marginBottom: 8 }}>
+                    <span>{t('procurement.material')} #{item.material_id ?? item.product_id} ({t('procurement.quantity')}: {item.quantity})</span>
+                    <Form.Item name={[index, 'pass_quantity']} noStyle>
+                      <InputNumber min={0} placeholder={t('procurement.pass_quantity')} style={{ width: 120 }} />
+                    </Form.Item>
+                    <Form.Item name={[index, 'reject_quantity']} noStyle>
+                      <InputNumber min={0} placeholder={t('procurement.reject_quantity')} style={{ width: 120 }} />
+                    </Form.Item>
+                  </Space>
+                ))}
+              </>
+            )}
+          </Form.List>
+        </Form>
+      </Modal>
+      <Modal
+        title={t('procurement.create_return')}
+        open={returnModalOpen}
+        onCancel={() => { setReturnModalOpen(false); setReturnOrder(null); }}
+        onOk={() => returnForm.submit()}
+        confirmLoading={submitting}
+        width={640}
+      >
+        <Form form={returnForm} layout="vertical" onFinish={handleReturn}>
+          <Form.Item name="reason" label={t('procurement.return_reason')}>
+            <Input />
+          </Form.Item>
+          <Form.List name="items">
+            {(fields, { add, remove }) => (
+              <>
+                <div style={{ marginBottom: 8, fontWeight: 500 }}>{t('procurement.items')}</div>
+                {fields.map((field) => (
+                  <Space key={field.key} align="baseline" style={{ display: 'flex', marginBottom: 8 }}>
+                    <Form.Item {...field} name={[field.name, 'order_item_id']} rules={[{ required: true }]}>
+                      <Select
+                        style={{ width: 200 }}
+                        placeholder={t('procurement.material')}
+                        options={returnItems.map((item) => ({
+                          value: item.id,
+                          label: `${item.material_id ?? item.product_id} (${t('procurement.quantity')}: ${item.quantity})`,
+                        }))}
+                      />
+                    </Form.Item>
+                    <Form.Item {...field} name={[field.name, 'quantity']} rules={[{ required: true }]}>
+                      <InputNumber min={1} placeholder={t('procurement.quantity')} />
+                    </Form.Item>
+                    <Form.Item {...field} name={[field.name, 'reason']}>
+                      <Input placeholder={t('procurement.return_reason')} />
+                    </Form.Item>
+                    <Button icon={<DeleteOutlined />} onClick={() => remove(field.name)} danger />
+                  </Space>
+                ))}
+                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                  {t('procurement.add_item')}
+                </Button>
+              </>
+            )}
+          </Form.List>
         </Form>
       </Modal>
     </div>

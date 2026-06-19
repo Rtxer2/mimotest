@@ -476,10 +476,19 @@
     "delivery_date": "Fecha de Entrega",
     "items": "Artículos",
     "material": "Material",
+    "product": "Producto",
     "quantity": "Cantidad",
     "unit_price": "Precio Unitario",
     "amount": "Monto",
-    "add_item": "Agregar Artículo"
+    "add_item": "Agregar Artículo",
+    "pass_quantity": "Cantidad OK",
+    "reject_quantity": "Cantidad Rechazada",
+    "returns": "Devoluciones",
+    "return_no": "Número de Devolución",
+    "create_return": "Crear Devolución",
+    "complete_return": "Completar Devolución",
+    "return_reason": "Motivo de Devolución",
+    "inspecting": "Inspeccionando"
   },
   "reports": {
     "title": "Exportar Reportes",

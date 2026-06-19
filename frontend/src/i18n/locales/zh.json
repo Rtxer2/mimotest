@@ -475,11 +475,20 @@
     "received_quantity": "已收数量",
     "delivery_date": "交货日期",
     "items": "明细",
-    "material": "物料",
+    "material": "原材料",
+    "product": "成品",
     "quantity": "数量",
     "unit_price": "单价",
     "amount": "金额",
-    "add_item": "添加明细"
+    "add_item": "添加明细",
+    "pass_quantity": "合格数量",
+    "reject_quantity": "不合格数量",
+    "returns": "采购退货",
+    "return_no": "退货单号",
+    "create_return": "创建退货",
+    "complete_return": "完成退货",
+    "return_reason": "退货原因",
+    "inspecting": "验收中"
   },
   "reports": {
     "title": "报表导出",

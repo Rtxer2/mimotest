@@ -29,6 +29,7 @@ import ReportExport from './pages/system/ReportExport';
 import SupplierList from './pages/procurement/SupplierList';
 import PurchaseRequestList from './pages/procurement/PurchaseRequestList';
 import PurchaseOrderList from './pages/procurement/PurchaseOrderList';
+import PurchaseReturnList from './pages/procurement/PurchaseReturnList';
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
         <Route path="procurement/suppliers" element={<SupplierList />} />
         <Route path="procurement/requests" element={<PurchaseRequestList />} />
         <Route path="procurement/orders" element={<PurchaseOrderList />} />
+        <Route path="procurement/returns" element={<PurchaseReturnList />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

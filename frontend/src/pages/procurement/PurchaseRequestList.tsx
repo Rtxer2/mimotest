@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Drawer, message, Popconfirm } from 'antd';
+import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, Popconfirm } from 'antd';
 import { PlusOutlined, DeleteOutlined, EyeOutlined, SendOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { procurementApi, PurchaseRequest, PurchaseRequestItem } from '../../api/procurement';
@@ -107,7 +107,8 @@ const PurchaseRequestList = () => {
   ];
 
   const itemColumns = [
-    { title: t('procurement.material'), dataIndex: 'material_id', key: 'material_id' },
+    { title: t('procurement.material'), dataIndex: 'item_type', key: 'item_type', render: (val: string) => val === 'material' ? t('procurement.material') : t('procurement.product') },
+    { title: 'ID', key: 'ref_id', render: (_: any, record: PurchaseRequestItem) => record.item_type === 'material' ? record.material_id : record.product_id },
     { title: t('procurement.quantity'), dataIndex: 'quantity', key: 'quantity' },
     { title: t('procurement.unit_price'), dataIndex: 'unit_price', key: 'unit_price', render: (val: number) => val?.toFixed(2) },
     {
@@ -148,8 +149,22 @@ const PurchaseRequestList = () => {
                 <div style={{ marginBottom: 8, fontWeight: 500 }}>{t('procurement.items')}</div>
                 {fields.map((field) => (
                   <Space key={field.key} align="baseline" style={{ display: 'flex', marginBottom: 8 }}>
-                    <Form.Item {...field} name={[field.name, 'material_id']} rules={[{ required: true }]}>
-                      <InputNumber placeholder={t('procurement.material')} />
+                    <Form.Item {...field} name={[field.name, 'item_type']} rules={[{ required: true }]}>
+                      <Select options={[{ value: 'material', label: t('procurement.material') }, { value: 'product', label: t('procurement.product') }]} style={{ width: 120 }} placeholder={t('procurement.material')} />
+                    </Form.Item>
+                    <Form.Item shouldUpdate={(prev, cur) => prev.items?.[field.name]?.item_type !== cur.items?.[field.name]?.item_type} noStyle>
+                      {({ getFieldValue }) => {
+                        const itemType = getFieldValue(['items', field.name, 'item_type']);
+                        return itemType === 'product' ? (
+                          <Form.Item {...field} name={[field.name, 'product_id']} rules={[{ required: true }]}>
+                            <InputNumber placeholder={t('procurement.product')} />
+                          </Form.Item>
+                        ) : (
+                          <Form.Item {...field} name={[field.name, 'material_id']} rules={[{ required: true }]}>
+                            <InputNumber placeholder={t('procurement.material')} />
+                          </Form.Item>
+                        );
+                      }}
                     </Form.Item>
                     <Form.Item {...field} name={[field.name, 'quantity']} rules={[{ required: true }]}>
                       <InputNumber placeholder={t('procurement.quantity')} min={1} />

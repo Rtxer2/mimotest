@@ -91,6 +91,7 @@ const Sidebar = () => {
         { key: '/procurement/suppliers', label: t('procurement.suppliers') },
         { key: '/procurement/requests', label: t('procurement.requests') },
         { key: '/procurement/orders', label: t('procurement.orders') },
+        { key: '/procurement/returns', label: t('procurement.returns') },
       ],
     },
     {

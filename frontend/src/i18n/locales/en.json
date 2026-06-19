@@ -476,10 +476,19 @@
     "delivery_date": "Delivery Date",
     "items": "Items",
     "material": "Material",
+    "product": "Product",
     "quantity": "Quantity",
     "unit_price": "Unit Price",
     "amount": "Amount",
-    "add_item": "Add Item"
+    "add_item": "Add Item",
+    "pass_quantity": "Pass Qty",
+    "reject_quantity": "Reject Qty",
+    "returns": "Returns",
+    "return_no": "Return No",
+    "create_return": "Create Return",
+    "complete_return": "Complete Return",
+    "return_reason": "Return Reason",
+    "inspecting": "Inspecting"
   },
   "reports": {
     "title": "Report Export",

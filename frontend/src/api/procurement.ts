@@ -14,7 +14,9 @@ export interface Supplier {
 export interface PurchaseRequestItem {
   id: number;
   request_id: number;
-  material_id: number;
+  item_type: string;
+  material_id: number | null;
+  product_id: number | null;
   quantity: number;
   unit_price: number;
 }
@@ -34,10 +36,31 @@ export interface PurchaseRequest {
 export interface PurchaseOrderItem {
   id: number;
   order_id: number;
-  material_id: number;
+  item_type: string;
+  material_id: number | null;
+  product_id: number | null;
   quantity: number;
   unit_price: number;
   received_quantity: number;
+}
+
+export interface PurchaseReturn {
+  id: number;
+  return_no: string;
+  order_id: number;
+  supplier_id: number;
+  status: string;
+  reason: string;
+  created_at: string;
+  items?: PurchaseReturnItem[];
+}
+
+export interface PurchaseReturnItem {
+  id: number;
+  return_id: number;
+  order_item_id: number;
+  quantity: number;
+  reason: string;
 }
 
 export interface PurchaseOrder {
@@ -67,7 +90,7 @@ export const procurementApi = {
     client.get<PurchaseRequest[]>('/procurement/requests', { params }),
   getRequest: (id: number) =>
     client.get<PurchaseRequest & { items: PurchaseRequestItem[] }>(`/procurement/requests/${id}`),
-  createRequest: (data: { supplier_id: number; remarks?: string; items: { material_id: number; quantity: number; unit_price: number }[] }) =>
+  createRequest: (data: { supplier_id: number; remarks?: string; items: { item_type: string; material_id?: number; product_id?: number; quantity: number; unit_price: number }[] }) =>
     client.post<PurchaseRequest>('/procurement/requests', data),
   submitRequest: (id: number) =>
     client.post<PurchaseRequest>(`/procurement/requests/${id}/submit-approval`),
@@ -76,8 +99,17 @@ export const procurementApi = {
     client.get<PurchaseOrder[]>('/procurement/orders', { params }),
   getOrder: (id: number) =>
     client.get<PurchaseOrder & { items: PurchaseOrderItem[] }>(`/procurement/orders/${id}`),
-  createOrder: (data: { supplier_id: number; request_id?: number; delivery_date?: string; remarks?: string; items: { material_id: number; quantity: number; unit_price: number }[] }) =>
+  createOrder: (data: { supplier_id: number; request_id?: number; delivery_date?: string; remarks?: string; items: { item_type: string; material_id?: number; product_id?: number; quantity: number; unit_price: number }[] }) =>
     client.post<PurchaseOrder>('/procurement/orders', data),
-  receiveItems: (orderId: number, items: { item_id: number; quantity: number }[]) =>
+  receiveItems: (orderId: number, items: { item_id: number; pass_quantity: number; reject_quantity: number }[]) =>
     client.post<PurchaseOrder>(`/procurement/orders/${orderId}/receive`, items),
+
+  listReturns: (params?: { skip?: number; limit?: number; order_id?: number }) =>
+    client.get<PurchaseReturn[]>('/procurement/returns', { params }),
+  getReturn: (id: number) =>
+    client.get<PurchaseReturn & { items: PurchaseReturnItem[] }>(`/procurement/returns/${id}`),
+  createReturn: (data: { order_id: number; supplier_id: number; reason?: string; items: { order_item_id: number; quantity: number; reason?: string }[] }) =>
+    client.post<PurchaseReturn>('/procurement/returns', data),
+  completeReturn: (id: number) =>
+    client.post<PurchaseReturn>(`/procurement/returns/${id}/complete`),
 };
