@@ -86,6 +86,9 @@ export const procurementApi = {
   deleteSupplier: (id: number) =>
     client.delete(`/procurement/suppliers/${id}`),
 
+  searchSuppliers: (q: string) =>
+    client.get<Supplier[]>('/procurement/suppliers/search', { params: { q } }),
+
   listRequests: (params?: { skip?: number; limit?: number; status?: string }) =>
     client.get<PurchaseRequest[]>('/procurement/requests', { params }),
   getRequest: (id: number) =>

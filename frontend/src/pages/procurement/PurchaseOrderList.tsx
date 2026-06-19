@@ -34,6 +34,8 @@ const PurchaseOrderList = () => {
   const [returnForm] = Form.useForm();
   const [materialOptions, setMaterialOptions] = useState<any[]>([]);
   const [productOptions, setProductOptions] = useState<any[]>([]);
+  const [supplierOptions, setSupplierOptions] = useState<any[]>([]);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(null);
   const [selectedMaterials, setSelectedMaterials] = useState<Record<number, any>>({});
   const [selectedProducts, setSelectedProducts] = useState<Record<number, any>>({});
 
@@ -50,6 +52,21 @@ const PurchaseOrderList = () => {
   };
 
   useEffect(() => { loadData(); }, []);
+
+  const searchSuppliers = useCallback(
+    debounce(async (q: string) => {
+      if (!q) { setSupplierOptions([]); return; }
+      try {
+        const res = await procurementApi.searchSuppliers(q);
+        setSupplierOptions(res.data.map((s) => ({ value: s.name, label: `${s.name} (${s.contact_person})`, data: s })));
+      } catch { setSupplierOptions([]); }
+    }, 300), []
+  );
+
+  const handleSelectSupplier = (value: string) => {
+    const opt = supplierOptions.find((o) => o.value === value);
+    if (opt?.data) setSelectedSupplierId(opt.data.id);
+  };
 
   const searchMaterials = useCallback(
     debounce(async (q: string) => {
@@ -94,7 +111,7 @@ const PurchaseOrderList = () => {
         return { item_type: 'material', material_id: material?.id || null, product_id: null, quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
       });
       await procurementApi.createOrder({
-        supplier_id: values.supplier_id,
+        supplier_id: selectedSupplierId || values.supplier_id,
         request_id: values.request_id,
         delivery_date: values.delivery_date,
         remarks: values.remarks,
@@ -103,6 +120,9 @@ const PurchaseOrderList = () => {
       message.success(t('common.save'));
       setModalOpen(false);
       form.resetFields();
+      setSelectedMaterials({});
+      setSelectedProducts({});
+      setSelectedSupplierId(null);
       loadData();
     } catch (error: any) {
       message.error(error?.response?.data?.detail || t('common.operation_failed'));
@@ -235,7 +255,7 @@ const PurchaseOrderList = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2>{t('procurement.orders')}</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedMaterials({}); setSelectedProducts({}); setModalOpen(true); }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedMaterials({}); setSelectedProducts({}); setSelectedSupplierId(null); setModalOpen(true); }}>
           {t('procurement.create_order')}
         </Button>
       </div>
@@ -250,8 +270,8 @@ const PurchaseOrderList = () => {
         width={640}
       >
         <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="supplier_id" label={t('procurement.supplier_name')} rules={[{ required: true }]}>
-            <InputNumber style={{ width: '100%' }} />
+          <Form.Item name="supplier_name" label={t('procurement.supplier_name')} rules={[{ required: true }]}>
+            <AutoComplete options={supplierOptions} onSearch={searchSuppliers} onSelect={handleSelectSupplier} placeholder={t('procurement.supplier_name')} filterOption={false} />
           </Form.Item>
           <Form.Item name="request_id" label={t('procurement.request_no')}>
             <InputNumber style={{ width: '100%' }} />

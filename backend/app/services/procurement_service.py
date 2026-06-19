@@ -19,6 +19,9 @@ class ProcurementService:
     def list_suppliers(self, skip=0, limit=100):
         return self.db.query(Supplier).offset(skip).limit(limit).all()
 
+    def search_suppliers(self, q: str, limit: int = 20):
+        return self.db.query(Supplier).filter(Supplier.name.ilike(f"%{q}%")).limit(limit).all()
+
     def get_supplier(self, id):
         return self.db.query(Supplier).filter(Supplier.id == id).first()
 

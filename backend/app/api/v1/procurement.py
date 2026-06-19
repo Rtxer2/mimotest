@@ -17,6 +17,12 @@ router = APIRouter()
 
 # === Suppliers ===
 
+@router.get("/suppliers/search", response_model=list[SupplierResponse])
+def search_suppliers(q: str = Query("", min_length=0), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
+    service = ProcurementService(db)
+    return service.search_suppliers(q) if q else []
+
+
 @router.get("/suppliers", response_model=list[SupplierResponse])
 def list_suppliers(skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=100), db: Session = Depends(get_db_session), current_user: User = Depends(require_any_role)):
     service = ProcurementService(db)
