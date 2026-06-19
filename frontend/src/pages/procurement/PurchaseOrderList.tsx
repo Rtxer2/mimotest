@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, AutoComplete, Popconfirm } from 'antd';
-import { PlusOutlined, DeleteOutlined, EyeOutlined, ImportOutlined, RollbackOutlined, EditOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, AutoComplete, Popconfirm, Descriptions } from 'antd';
+import { PlusOutlined, DeleteOutlined, EyeOutlined, ImportOutlined, RollbackOutlined, EditOutlined, CheckCircleOutlined, SearchOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { procurementApi, PurchaseOrder, PurchaseOrderItem } from '../../api/procurement';
 import { inventoryApi } from '../../api/inventory';
@@ -15,15 +15,20 @@ const statusColors: Record<string, string> = {
   cancelled: 'red',
 };
 
+const STATUS_OPTIONS = ['pending', 'ordered', 'inspecting', 'received', 'returned', 'cancelled'];
+
 const PurchaseOrderList = () => {
   const { t } = useTranslation();
   const [data, setData] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detailItems, setDetailItems] = useState<PurchaseOrderItem[]>([]);
+  const [detailOrder, setDetailOrder] = useState<PurchaseOrder | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [receiveModalOpen, setReceiveModalOpen] = useState(false);
   const [receivingOrderId, setReceivingOrderId] = useState<number | null>(null);
@@ -41,10 +46,10 @@ const PurchaseOrderList = () => {
   const [selectedMaterials, setSelectedMaterials] = useState<Record<number, any>>({});
   const [selectedProducts, setSelectedProducts] = useState<Record<number, any>>({});
 
-  const loadData = async () => {
+  const loadData = async (status?: string | null) => {
     setLoading(true);
     try {
-      const res = await procurementApi.listOrders({ limit: 100 });
+      const res = await procurementApi.listOrders({ limit: 100, status: status || undefined });
       setData(res.data);
     } catch {
       message.error(t('common.failed_to_load'));
@@ -54,6 +59,11 @@ const PurchaseOrderList = () => {
   };
 
   useEffect(() => { loadData(); }, []);
+
+  const handleStatusFilter = (value: string | null) => {
+    setStatusFilter(value);
+    loadData(value);
+  };
 
   const searchSuppliers = useCallback(
     debounce(async (q: string) => {
@@ -224,6 +234,7 @@ const PurchaseOrderList = () => {
     setDetailLoading(true);
     try {
       const res = await procurementApi.getOrder(id);
+      setDetailOrder(res.data);
       setDetailItems(res.data.items || []);
     } catch {
       message.error(t('common.failed_to_load'));
@@ -317,6 +328,11 @@ const PurchaseOrderList = () => {
     }
   };
 
+  const filteredData = data.filter((item) =>
+    !searchText || item.order_no.toLowerCase().includes(searchText.toLowerCase()) ||
+    item.supplier_name?.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   const columns = [
     { title: t('procurement.order_no'), dataIndex: 'order_no', key: 'order_no' },
     { title: t('procurement.supplier_name'), dataIndex: 'supplier_name', key: 'supplier_name' },
@@ -371,11 +387,29 @@ const PurchaseOrderList = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2>{t('procurement.orders')}</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedMaterials({}); setSelectedProducts({}); setSelectedSupplierId(null); setEditingOrder(null); setModalOpen(true); }}>
-          {t('procurement.create_order')}
-        </Button>
+        <Space>
+          <Input
+            placeholder={t('common.search')}
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200 }}
+            allowClear
+          />
+          <Select
+            placeholder={t('procurement.status')}
+            value={statusFilter}
+            onChange={handleStatusFilter}
+            style={{ width: 140 }}
+            allowClear
+            options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+          />
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedMaterials({}); setSelectedProducts({}); setSelectedSupplierId(null); setEditingOrder(null); setModalOpen(true); }}>
+            {t('procurement.create_order')}
+          </Button>
+        </Space>
       </div>
-      <Table columns={columns} dataSource={data} loading={loading} rowKey="id" />
+      <Table columns={columns} dataSource={filteredData} loading={loading} rowKey="id" />
 
       <Modal
         title={editingOrder ? t('common.edit') : t('procurement.create_order')}
@@ -450,11 +484,27 @@ const PurchaseOrderList = () => {
       </Modal>
 
       <Drawer
-        title={t('procurement.items')}
+        title={t('procurement.order_no') + ': ' + (detailOrder?.order_no || '')}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        width={600}
+        width={700}
       >
+        {detailOrder && (
+          <>
+            <Descriptions bordered column={2} size="small" style={{ marginBottom: 16 }}>
+              <Descriptions.Item label={t('procurement.order_no')}>{detailOrder.order_no}</Descriptions.Item>
+              <Descriptions.Item label={t('procurement.supplier_name')}>{detailOrder.supplier_name}</Descriptions.Item>
+              <Descriptions.Item label={t('procurement.status')}>
+                <Tag color={statusColors[detailOrder.status] ?? 'default'}>{detailOrder.status}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label={t('procurement.amount')}>¥{Number(detailOrder.total_amount).toFixed(2)}</Descriptions.Item>
+              <Descriptions.Item label={t('procurement.delivery_date')}>{detailOrder.delivery_date || '-'}</Descriptions.Item>
+              <Descriptions.Item label={t('common.created_at')}>{detailOrder.created_at?.slice(0, 19)?.replace('T', ' ')}</Descriptions.Item>
+              <Descriptions.Item label={t('common.remarks')} span={2}>{detailOrder.remarks || '-'}</Descriptions.Item>
+            </Descriptions>
+            <h4>{t('procurement.items')}</h4>
+          </>
+        )}
         <Table columns={itemColumns} dataSource={detailItems} loading={detailLoading} rowKey="id" pagination={false} />
       </Drawer>
 
