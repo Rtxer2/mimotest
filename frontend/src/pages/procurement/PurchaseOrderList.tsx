@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, AutoComplete, Popconfirm, Descriptions } from 'antd';
+import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, AutoComplete, Popconfirm, Descriptions, DatePicker } from 'antd';
 import { PlusOutlined, DeleteOutlined, EyeOutlined, ImportOutlined, RollbackOutlined, EditOutlined, CheckCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
 import { procurementApi, PurchaseOrder, PurchaseOrderItem } from '../../api/procurement';
 import { inventoryApi } from '../../api/inventory';
@@ -23,6 +24,9 @@ const PurchaseOrderList = () => {
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+  const [supplierFilter, setSupplierFilter] = useState<number | null>(null);
+  const [supplierList, setSupplierList] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -58,7 +62,14 @@ const PurchaseOrderList = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); loadSuppliers(); }, []);
+
+  const loadSuppliers = async () => {
+    try {
+      const res = await procurementApi.listSuppliers({ limit: 200 });
+      setSupplierList(res.data);
+    } catch {}
+  };
 
   const handleStatusFilter = (value: string | null) => {
     setStatusFilter(value);
@@ -328,10 +339,16 @@ const PurchaseOrderList = () => {
     }
   };
 
-  const filteredData = data.filter((item) =>
-    !searchText || item.order_no.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.supplier_name?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filteredData = data.filter((item) => {
+    if (searchText && !item.order_no.toLowerCase().includes(searchText.toLowerCase()) &&
+        !item.supplier_name?.toLowerCase().includes(searchText.toLowerCase())) return false;
+    if (supplierFilter && item.supplier_id !== supplierFilter) return false;
+    if (dateRange && dateRange[0] && dateRange[1]) {
+      const created = dayjs(item.created_at);
+      if (created.isBefore(dateRange[0], 'day') || created.isAfter(dateRange[1], 'day')) return false;
+    }
+    return true;
+  });
 
   const columns = [
     { title: t('procurement.order_no'), dataIndex: 'order_no', key: 'order_no' },
@@ -403,6 +420,19 @@ const PurchaseOrderList = () => {
             style={{ width: 140 }}
             allowClear
             options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+          />
+          <Select
+            placeholder={t('procurement.supplier_name')}
+            value={supplierFilter}
+            onChange={(v) => setSupplierFilter(v)}
+            style={{ width: 160 }}
+            allowClear
+            options={supplierList.map((s) => ({ value: s.id, label: s.code ? `${s.code} - ${s.name}` : s.name }))}
+          />
+          <DatePicker.RangePicker
+            value={dateRange as any}
+            onChange={(dates) => setDateRange(dates as any)}
+            style={{ width: 240 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedMaterials({}); setSelectedProducts({}); setSelectedSupplierId(null); setEditingOrder(null); setModalOpen(true); }}>
             {t('procurement.create_order')}
