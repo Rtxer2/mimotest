@@ -112,7 +112,7 @@ export const procurementApi = {
   createRequest: (data: { supplier_id: number; remarks?: string; items: { item_type: string; material_id?: number; product_id?: number; quantity: number; unit_price: number }[] }) =>
     client.post<PurchaseRequest>('/procurement/requests', data),
   submitRequest: (id: number) =>
-    client.post<PurchaseRequest>(`/procurement/requests/${id}/submit-approval`),
+    client.post<PurchaseRequest>(`/procurement/requests/${id}/submit`),
   deleteRequest: (id: number) =>
     client.delete(`/procurement/requests/${id}`),
 
