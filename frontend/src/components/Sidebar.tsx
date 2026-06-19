@@ -10,6 +10,7 @@ import {
   BellOutlined,
   AuditOutlined,
   BarChartOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -83,6 +84,16 @@ const Sidebar = () => {
       ],
     },
     {
+      key: '/procurement',
+      icon: <ShoppingOutlined />,
+      label: t('procurement.title'),
+      children: [
+        { key: '/procurement/suppliers', label: t('procurement.suppliers') },
+        { key: '/procurement/requests', label: t('procurement.requests') },
+        { key: '/procurement/orders', label: t('procurement.orders') },
+      ],
+    },
+    {
       key: '/notifications',
       icon: <BellOutlined />,
       label: t('sidebar.notifications'),
@@ -109,7 +120,7 @@ const Sidebar = () => {
         theme="dark"
         mode="inline"
         selectedKeys={[location.pathname]}
-        defaultOpenKeys={['/production', '/inventory', '/quality', '/system', '/approvals']}
+        defaultOpenKeys={['/production', '/inventory', '/quality', '/system', '/approvals', '/procurement']}
         items={menuItems}
         onClick={({ key }) => navigate(key)}
       />

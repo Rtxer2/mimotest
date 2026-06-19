@@ -26,6 +26,9 @@ import FlowConfig from './pages/approvals/FlowConfig';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import DashboardConfigPage from './pages/system/DashboardConfig';
 import ReportExport from './pages/system/ReportExport';
+import SupplierList from './pages/procurement/SupplierList';
+import PurchaseRequestList from './pages/procurement/PurchaseRequestList';
+import PurchaseOrderList from './pages/procurement/PurchaseOrderList';
 
 function App() {
   return (
@@ -56,6 +59,9 @@ function App() {
         <Route path="approvals/initiated" element={<InitiatedList />} />
         <Route path="approvals/flows" element={<FlowConfig />} />
         <Route path="approvals/:id" element={<ApprovalDetail />} />
+        <Route path="procurement/suppliers" element={<SupplierList />} />
+        <Route path="procurement/requests" element={<PurchaseRequestList />} />
+        <Route path="procurement/orders" element={<PurchaseOrderList />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
