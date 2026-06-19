@@ -155,6 +155,9 @@ const OrderDetail = () => {
             dataSource={approvalRecords}
             rowKey="id"
             pagination={false}
+            onRow={(record) => ({
+              style: record.action === 'reject' ? { background: '#fff2f0' } : {},
+            })}
           />
         </Card>
       )}
