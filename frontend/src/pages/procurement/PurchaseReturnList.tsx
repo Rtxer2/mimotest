@@ -57,7 +57,7 @@ const PurchaseReturnList = () => {
   const columns = [
     { title: t('procurement.return_no'), dataIndex: 'return_no', key: 'return_no' },
     { title: t('procurement.order_no'), dataIndex: 'order_id', key: 'order_id' },
-    { title: t('procurement.supplier_name'), dataIndex: 'supplier_id', key: 'supplier_id' },
+    { title: t('procurement.supplier_name'), dataIndex: 'supplier_name', key: 'supplier_name' },
     {
       title: t('procurement.status'),
       dataIndex: 'status',

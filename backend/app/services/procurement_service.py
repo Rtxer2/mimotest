@@ -293,7 +293,8 @@ class ProcurementService:
         q = self.db.query(PurchaseReturn)
         if order_id:
             q = q.filter(PurchaseReturn.order_id == order_id)
-        return q.order_by(PurchaseReturn.created_at.desc()).offset(skip).limit(limit).all()
+        items = q.order_by(PurchaseReturn.created_at.desc()).offset(skip).limit(limit).all()
+        return self._enrich_with_supplier_name(items)
 
     def get_return_detail(self, id):
         ret = self.db.query(PurchaseReturn).filter(PurchaseReturn.id == id).first()

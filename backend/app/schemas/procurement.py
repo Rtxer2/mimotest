@@ -199,6 +199,7 @@ class PurchaseReturnResponse(BaseModel):
     return_no: str
     order_id: int
     supplier_id: int
+    supplier_name: str = ""
     status: str
     reason: str
     created_at: datetime
