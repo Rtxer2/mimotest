@@ -1,0 +1,12 @@
+**/__pycache__
+**/*.pyc
+**/.venv
+**/node_modules
+**/dist
+**/.git
+**/.DS_Store
+**/*.md
+**/docs
+**/ERPtest.docx
+backend/uploads/*
+frontend/dist
