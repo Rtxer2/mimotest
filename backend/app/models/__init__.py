@@ -9,6 +9,7 @@ from app.models.dict import DictType, DictEntry
 from app.models.notification import Notification, NotificationRule
 from app.models.approval import ApprovalFlow, ApprovalNode, ApprovalInstance, ApprovalRecord
 from app.models.user_preference import UserPreferences
+from app.models.procurement import Supplier, PurchaseRequest, PurchaseRequestItem, PurchaseOrder, PurchaseOrderItem
 
 __all__ = [
     "Base",
@@ -22,4 +23,5 @@ __all__ = [
     "Notification", "NotificationRule",
     "ApprovalFlow", "ApprovalNode", "ApprovalInstance", "ApprovalRecord",
     "UserPreferences",
+    "Supplier", "PurchaseRequest", "PurchaseRequestItem", "PurchaseOrder", "PurchaseOrderItem",
 ]
