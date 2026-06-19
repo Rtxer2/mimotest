@@ -47,7 +47,7 @@ const OrderList = () => {
   const loadOrders = async (status?: string | null) => {
     setLoading(true);
     try {
-      const response = await orderApi.list({ limit: 200, status: status || undefined });
+      const response = await orderApi.list({ limit: 100, status: status || undefined });
       setOrders(response.data);
     } catch (error) {
       console.error('Failed to load orders:', error);

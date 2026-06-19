@@ -66,7 +66,7 @@ const PurchaseOrderList = () => {
 
   const loadSuppliers = async () => {
     try {
-      const res = await procurementApi.listSuppliers({ limit: 200 });
+      const res = await procurementApi.listSuppliers({ limit: 100 });
       setSupplierList(res.data);
     } catch {}
   };
