@@ -493,7 +493,8 @@
     "create_return": "Crear Devolución",
     "complete_return": "Completar Devolución",
     "return_reason": "Motivo de Devolución",
-    "inspecting": "Inspeccionando"
+    "inspecting": "Inspeccionando",
+    "complete_order": "Completar y Recibir"
   },
   "reports": {
     "title": "Exportar Reportes",

@@ -197,6 +197,53 @@ class ProcurementService:
         self.db.commit()
         return True
 
+    def update_order(self, order_id, data):
+        order = self.get_order(order_id)
+        if not order:
+            return None, "Order not found"
+        if order.status not in ("pending", "ordered"):
+            return None, f"Cannot edit order in '{order.status}' status"
+        for key, value in data.model_dump(exclude_unset=True).items():
+            if key != "items":
+                setattr(order, key, value)
+        if data.items is not None:
+            self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.order_id == order_id).delete()
+            total = Decimal("0")
+            for item_data in data.items:
+                item = PurchaseOrderItem(order_id=order.id, **item_data.model_dump())
+                self.db.add(item)
+                total += Decimal(str(item_data.quantity)) * Decimal(str(item_data.unit_price))
+            order.total_amount = total
+        self.db.commit()
+        self.db.refresh(order)
+        return order, None
+
+    def complete_order(self, order_id):
+        order = self.get_order(order_id)
+        if not order:
+            return None, "Order not found"
+        if order.status in ("received", "cancelled"):
+            return None, f"Order already '{order.status}'"
+        items = self.db.query(PurchaseOrderItem).filter(PurchaseOrderItem.order_id == order_id).all()
+        for item in items:
+            remaining = item.quantity - item.received_quantity
+            if remaining <= 0:
+                continue
+            if item.item_type == "material" and item.material_id:
+                material = self.db.query(Material).filter(Material.id == item.material_id).first()
+                if material:
+                    material.current_stock += remaining
+            elif item.item_type == "product" and item.product_id:
+                from app.models.inventory import FinishedProduct
+                product = self.db.query(FinishedProduct).filter(FinishedProduct.id == item.product_id).first()
+                if product:
+                    product.current_stock += int(remaining)
+            item.received_quantity = item.quantity
+        order.status = "received"
+        self.db.commit()
+        self.db.refresh(order)
+        return order, None
+
     # === Purchase Returns ===
     def create_return(self, data, user_id):
         return_no = f"RET-{uuid.uuid4().hex[:16].upper()}"

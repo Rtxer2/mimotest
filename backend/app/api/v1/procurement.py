@@ -191,6 +191,24 @@ def receive_items(order_id: int, items: list[ReceiveItem], db: Session = Depends
     return order
 
 
+@router.put("/orders/{order_id}", response_model=PurchaseOrderResponse)
+def update_order(order_id: int, data: PurchaseOrderCreate, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = ProcurementService(db)
+    order, error = service.update_order(order_id, data)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+    return order
+
+
+@router.post("/orders/{order_id}/complete", response_model=PurchaseOrderResponse)
+def complete_order(order_id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = ProcurementService(db)
+    order, error = service.complete_order(order_id)
+    if error:
+        raise HTTPException(status_code=400, detail=error)
+    return order
+
+
 @router.delete("/orders/{order_id}")
 def delete_order(order_id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
     service = ProcurementService(db)

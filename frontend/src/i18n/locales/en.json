@@ -493,7 +493,8 @@
     "create_return": "Create Return",
     "complete_return": "Complete Return",
     "return_reason": "Return Reason",
-    "inspecting": "Inspecting"
+    "inspecting": "Inspecting",
+    "complete_order": "Complete & Receive"
   },
   "reports": {
     "title": "Report Export",

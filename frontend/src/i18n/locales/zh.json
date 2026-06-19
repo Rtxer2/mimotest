@@ -493,7 +493,8 @@
     "create_return": "创建退货",
     "complete_return": "完成退货",
     "return_reason": "退货原因",
-    "inspecting": "验收中"
+    "inspecting": "验收中",
+    "complete_order": "完成入库"
   },
   "reports": {
     "title": "报表导出",

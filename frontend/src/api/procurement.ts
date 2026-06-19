@@ -41,6 +41,7 @@ export interface PurchaseRequest {
   id: number;
   request_no: string;
   supplier_id: number;
+  supplier_name: string;
   status: string;
   total_amount: number;
   remarks: string;
@@ -84,6 +85,7 @@ export interface PurchaseOrder {
   order_no: string;
   request_id: number | null;
   supplier_id: number;
+  supplier_name: string;
   status: string;
   total_amount: number;
   delivery_date: string;
@@ -124,6 +126,10 @@ export const procurementApi = {
     client.post<PurchaseOrder>('/procurement/orders', data),
   receiveItems: (orderId: number, items: { item_id: number; pass_quantity: number; reject_quantity: number }[]) =>
     client.post<PurchaseOrder>(`/procurement/orders/${orderId}/receive`, items),
+  updateOrder: (id: number, data: { supplier_id: number; request_id?: number; delivery_date?: string; remarks?: string; items: { item_type: string; material_id?: number; product_id?: number; quantity: number; unit_price: number }[] }) =>
+    client.put<PurchaseOrder>(`/procurement/orders/${id}`, data),
+  completeOrder: (id: number) =>
+    client.post<PurchaseOrder>(`/procurement/orders/${id}/complete`),
 
   listReturns: (params?: { skip?: number; limit?: number; order_id?: number }) =>
     client.get<PurchaseReturn[]>('/procurement/returns', { params }),

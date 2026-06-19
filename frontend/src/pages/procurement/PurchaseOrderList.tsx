@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, AutoComplete } from 'antd';
-import { PlusOutlined, DeleteOutlined, EyeOutlined, ImportOutlined, RollbackOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Tag, Modal, Form, Input, InputNumber, Select, Drawer, message, AutoComplete, Popconfirm } from 'antd';
+import { PlusOutlined, DeleteOutlined, EyeOutlined, ImportOutlined, RollbackOutlined, EditOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { procurementApi, PurchaseOrder, PurchaseOrderItem } from '../../api/procurement';
 import { inventoryApi } from '../../api/inventory';
@@ -19,6 +19,7 @@ const PurchaseOrderList = () => {
   const [data, setData] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<PurchaseOrder | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detailItems, setDetailItems] = useState<PurchaseOrderItem[]>([]);
@@ -131,6 +132,74 @@ const PurchaseOrderList = () => {
     }
   };
 
+  const openEdit = async (record: PurchaseOrder) => {
+    setEditingOrder(record);
+    try {
+      const res = await procurementApi.getOrder(record.id);
+      const order = res.data;
+      form.setFieldsValue({
+        supplier_name: record.supplier_name,
+        delivery_date: order.delivery_date,
+        remarks: order.remarks,
+        items: (order.items || []).map((item: any) => ({
+          item_type: item.item_type || 'material',
+          material_id: item.material_id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+        })),
+      });
+      setSelectedSupplierId(order.supplier_id);
+      setModalOpen(true);
+    } catch {
+      message.error(t('common.failed_to_load'));
+    }
+  };
+
+  const handleEdit = async (values: any) => {
+    if (!editingOrder) return;
+    setSubmitting(true);
+    try {
+      const items = (values.items || []).map((item: any, index: number) => {
+        const itemType = item.item_type || 'material';
+        if (itemType === 'product') {
+          const product = selectedProducts[index];
+          return { item_type: 'product', material_id: null, product_id: product?.id || Number(item.product_id), quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
+        }
+        const material = selectedMaterials[index];
+        return { item_type: 'material', material_id: material?.id || Number(item.material_id), product_id: null, quantity: Number(item.quantity), unit_price: Number(item.unit_price) };
+      });
+      await procurementApi.updateOrder(editingOrder.id, {
+        supplier_id: selectedSupplierId || editingOrder.supplier_id,
+        delivery_date: values.delivery_date,
+        remarks: values.remarks,
+        items,
+      });
+      message.success(t('common.save'));
+      setModalOpen(false);
+      setEditingOrder(null);
+      form.resetFields();
+      setSelectedMaterials({});
+      setSelectedProducts({});
+      setSelectedSupplierId(null);
+      loadData();
+    } catch (error: any) {
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleComplete = async (id: number) => {
+    try {
+      await procurementApi.completeOrder(id);
+      message.success(t('procurement.receive'));
+      loadData();
+    } catch (error: any) {
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
+    }
+  };
+
   const showDetail = async (id: number) => {
     setDrawerOpen(true);
     setDetailLoading(true);
@@ -227,8 +296,16 @@ const PurchaseOrderList = () => {
       render: (_: any, record: PurchaseOrder) => (
         <Space>
           <Button size="small" icon={<EyeOutlined />} onClick={() => showDetail(record.id)}>{t('common.view')}</Button>
+          {(record.status === 'pending' || record.status === 'ordered') && (
+            <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)}>{t('common.edit')}</Button>
+          )}
           {record.status === 'ordered' && (
             <Button size="small" icon={<ImportOutlined />} onClick={() => openReceive(record.id)}>{t('procurement.receive')}</Button>
+          )}
+          {(record.status === 'pending' || record.status === 'ordered') && (
+            <Popconfirm title={t('common.confirm')} onConfirm={() => handleComplete(record.id)}>
+              <Button size="small" type="primary" icon={<CheckCircleOutlined />}>{t('procurement.complete_order')}</Button>
+            </Popconfirm>
           )}
           {(record.status === 'received' || record.status === 'inspecting') && (
             <Button size="small" icon={<RollbackOutlined />} onClick={() => openReturnModal(record)}>{t('procurement.create_return')}</Button>
@@ -255,21 +332,21 @@ const PurchaseOrderList = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2>{t('procurement.orders')}</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedMaterials({}); setSelectedProducts({}); setSelectedSupplierId(null); setModalOpen(true); }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setSelectedMaterials({}); setSelectedProducts({}); setSelectedSupplierId(null); setEditingOrder(null); setModalOpen(true); }}>
           {t('procurement.create_order')}
         </Button>
       </div>
       <Table columns={columns} dataSource={data} loading={loading} rowKey="id" />
 
       <Modal
-        title={t('procurement.create_order')}
+        title={editingOrder ? t('common.edit') : t('procurement.create_order')}
         open={modalOpen}
-        onCancel={() => setModalOpen(false)}
+        onCancel={() => { setModalOpen(false); setEditingOrder(null); }}
         onOk={() => form.submit()}
         confirmLoading={submitting}
         width={640}
       >
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
+        <Form form={form} layout="vertical" onFinish={editingOrder ? handleEdit : handleCreate}>
           <Form.Item name="supplier_name" label={t('procurement.supplier_name')} rules={[{ required: true }]}>
             <AutoComplete options={supplierOptions} onSearch={searchSuppliers} onSelect={handleSelectSupplier} placeholder={t('procurement.supplier_name')} filterOption={false} />
           </Form.Item>
