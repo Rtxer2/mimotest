@@ -8,6 +8,7 @@ from app.models.quality import QualityInspection, QualityIssue
 from app.models.dict import DictType, DictEntry
 from app.models.notification import Notification, NotificationRule
 from app.models.approval import ApprovalFlow, ApprovalNode, ApprovalInstance, ApprovalRecord
+from app.models.user_preference import UserPreferences
 
 __all__ = [
     "Base",
@@ -20,4 +21,5 @@ __all__ = [
     "DictType", "DictEntry",
     "Notification", "NotificationRule",
     "ApprovalFlow", "ApprovalNode", "ApprovalInstance", "ApprovalRecord",
+    "UserPreferences",
 ]
