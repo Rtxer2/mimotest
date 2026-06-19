@@ -258,6 +258,7 @@ class ApprovalService:
             instance.current_node_order = next_node.node_order
         else:
             instance.status = "approved"
+            self._update_business_status(instance, "approved")
 
         self.db.commit()
         self.db.refresh(instance)
@@ -302,9 +303,28 @@ class ApprovalService:
                 instance.current_node_order = 1
 
         instance.status = "rejected"
+        self._update_business_status(instance, "rejected")
         self.db.commit()
         self.db.refresh(instance)
         return instance
+
+    def _update_business_status(self, instance, approval_result: str):
+        if instance.business_type == "order":
+            from app.models.order import Order
+            order = self.db.query(Order).filter(Order.id == instance.business_id).first()
+            if order:
+                if approval_result == "approved":
+                    order.status = "confirmed"
+                elif approval_result == "rejected":
+                    order.status = "cancelled"
+        elif instance.business_type == "purchase":
+            from app.models.procurement import PurchaseRequest
+            req = self.db.query(PurchaseRequest).filter(PurchaseRequest.id == instance.business_id).first()
+            if req:
+                if approval_result == "approved":
+                    req.status = "approved"
+                elif approval_result == "rejected":
+                    req.status = "rejected"
 
     def cancel(self, instance_id: int, user_id: int):
         instance = self.get_instance(instance_id)

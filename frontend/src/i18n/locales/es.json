@@ -200,6 +200,8 @@
     "status_update_failed": "Error al actualizar estado",
     "submitted_for_approval": "Enviado a aprobación",
     "submit_approval_failed": "Error al enviar a aprobación",
+    "complete_order": "Completar Pedido",
+    "confirm_complete": "¿Está seguro de marcar este pedido como completado?",
     "create_title": "Crear pedido",
     "select_customer": "Seleccionar cliente",
     "order_created": "Pedido creado",

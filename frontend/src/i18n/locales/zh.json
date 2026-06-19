@@ -200,6 +200,8 @@
     "status_update_failed": "更新状态失败",
     "submitted_for_approval": "已提交审批",
     "submit_approval_failed": "提交审批失败",
+    "complete_order": "完成订单",
+    "confirm_complete": "确定将订单标记为已完成吗？",
     "create_title": "创建订单",
     "select_customer": "选择客户",
     "order_created": "订单创建成功",

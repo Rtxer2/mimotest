@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, Descriptions, Table, Tag, Select, Button, message, Popconfirm, Space } from 'antd';
-import { SendOutlined, FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { SendOutlined, FileExcelOutlined, FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { orderApi, Order, OrderItem } from '../../api/orders';
 import { approvalApi } from '../../api/approvals';
@@ -79,6 +79,17 @@ const OrderDetail = () => {
     }
   };
 
+  const handleComplete = async () => {
+    if (!id) return;
+    try {
+      await orderApi.updateStatus(parseInt(id), 'completed');
+      message.success(t('orders.status_completed'));
+      loadOrder();
+    } catch {
+      message.error(t('orders.status_update_failed'));
+    }
+  };
+
   const handleExport = async (format: string) => {
     if (!id) return;
     try {
@@ -121,6 +132,11 @@ const OrderDetail = () => {
           {order.status === 'pending' && (
             <Popconfirm title={t('orders.confirm_submit_approval')} onConfirm={handleSubmitApproval}>
               <Button type="primary" icon={<SendOutlined />}>{t('orders.submit_approval')}</Button>
+            </Popconfirm>
+          )}
+          {(order.status === 'confirmed' || order.status === 'in_production') && (
+            <Popconfirm title={t('orders.confirm_complete')} onConfirm={handleComplete}>
+              <Button type="primary" icon={<CheckCircleOutlined />}>{t('orders.complete_order')}</Button>
             </Popconfirm>
           )}
         </Space>

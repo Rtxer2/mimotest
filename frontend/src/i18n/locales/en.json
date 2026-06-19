@@ -200,6 +200,8 @@
     "status_update_failed": "Failed to update status",
     "submitted_for_approval": "Submitted for approval",
     "submit_approval_failed": "Failed to submit for approval",
+    "complete_order": "Complete Order",
+    "confirm_complete": "Are you sure to mark this order as completed?",
     "create_title": "Create Order",
     "select_customer": "Select customer",
     "order_created": "Order created",
