@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, Descriptions, Table, Tag, Button, Modal, Form, Input, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { customerApi, Customer, Contact, FollowUp } from '../../api/customers';
 
 const CustomerDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [customer, setCustomer] = useState<Customer & { contacts: Contact[]; follow_ups: FollowUp[] } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,12 +36,12 @@ const CustomerDetail = () => {
     if (!id) return;
     try {
       await customerApi.addContact(parseInt(id), values);
-      message.success('Contact added');
+      message.success(t('customers.contact_added'));
       contactForm.resetFields();
       setContactModalVisible(false);
       loadCustomer();
     } catch (error) {
-      message.error('Failed to add contact');
+      message.error(t('customers.contact_add_failed'));
     }
   };
 
@@ -47,63 +49,63 @@ const CustomerDetail = () => {
     if (!id) return;
     try {
       await customerApi.addFollowUp(parseInt(id), values);
-      message.success('Follow-up added');
+      message.success(t('customers.follow_up_added'));
       followUpForm.resetFields();
       setFollowUpModalVisible(false);
       loadCustomer();
     } catch (error) {
-      message.error('Failed to add follow-up');
+      message.error(t('customers.follow_up_add_failed'));
     }
   };
 
   if (!customer) return null;
 
   const contactColumns = [
-    { title: 'Name', dataIndex: 'name', key: 'name' },
-    { title: 'Position', dataIndex: 'position', key: 'position' },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
+    { title: t('common.name'), dataIndex: 'name', key: 'name' },
+    { title: t('customers.position'), dataIndex: 'position', key: 'position' },
+    { title: t('common.phone'), dataIndex: 'phone', key: 'phone' },
+    { title: t('common.email'), dataIndex: 'email', key: 'email' },
     {
-      title: 'Primary',
+      title: t('customers.primary'),
       dataIndex: 'is_primary',
       key: 'is_primary',
-      render: (val: boolean) => (val ? <Tag color="green">Yes</Tag> : <Tag>No</Tag>),
+      render: (val: boolean) => (val ? <Tag color="green">{t('common.yes')}</Tag> : <Tag>{t('common.no')}</Tag>),
     },
   ];
 
   const followUpColumns = [
-    { title: 'Type', dataIndex: 'type', key: 'type' },
-    { title: 'Content', dataIndex: 'content', key: 'content' },
-    { title: 'Next Follow', dataIndex: 'next_follow_date', key: 'next_follow_date' },
+    { title: t('common.type'), dataIndex: 'type', key: 'type' },
+    { title: t('common.content'), dataIndex: 'content', key: 'content' },
+    { title: t('customers.next_follow'), dataIndex: 'next_follow_date', key: 'next_follow_date' },
   ];
 
   return (
     <div>
-      <h2>Customer Detail</h2>
+      <h2>{t('customers.detail_title')}</h2>
       <Card loading={loading}>
         <Descriptions bordered column={2}>
-          <Descriptions.Item label="Code">{customer.code}</Descriptions.Item>
-          <Descriptions.Item label="Name">{customer.name}</Descriptions.Item>
-          <Descriptions.Item label="Level">
+          <Descriptions.Item label={t('customers.code')}>{customer.code}</Descriptions.Item>
+          <Descriptions.Item label={t('customers.name')}>{customer.name}</Descriptions.Item>
+          <Descriptions.Item label={t('customers.level')}>
             <Tag color={customer.level === 'vip' ? 'gold' : 'blue'}>{customer.level.toUpperCase()}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Status">
+          <Descriptions.Item label={t('customers.status')}>
             <Tag color={customer.status === 'active' ? 'green' : 'red'}>{customer.status.toUpperCase()}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Country">{customer.country}</Descriptions.Item>
-          <Descriptions.Item label="Source">{customer.source}</Descriptions.Item>
-          <Descriptions.Item label="Email">{customer.email}</Descriptions.Item>
-          <Descriptions.Item label="Phone">{customer.phone}</Descriptions.Item>
-          <Descriptions.Item label="Address" span={2}>{customer.address}</Descriptions.Item>
+          <Descriptions.Item label={t('customers.country')}>{customer.country}</Descriptions.Item>
+          <Descriptions.Item label={t('customers.source')}>{customer.source}</Descriptions.Item>
+          <Descriptions.Item label={t('customers.email')}>{customer.email}</Descriptions.Item>
+          <Descriptions.Item label={t('customers.phone')}>{customer.phone}</Descriptions.Item>
+          <Descriptions.Item label={t('customers.address')} span={2}>{customer.address}</Descriptions.Item>
         </Descriptions>
       </Card>
 
       <Card
-        title="Contacts"
+        title={t('customers.contacts')}
         style={{ marginTop: 16 }}
         extra={
           <Button icon={<PlusOutlined />} onClick={() => setContactModalVisible(true)}>
-            Add Contact
+            {t('customers.add_contact')}
           </Button>
         }
       >
@@ -111,40 +113,40 @@ const CustomerDetail = () => {
       </Card>
 
       <Card
-        title="Follow-ups"
+        title={t('customers.follow_ups')}
         style={{ marginTop: 16 }}
         extra={
           <Button icon={<PlusOutlined />} onClick={() => setFollowUpModalVisible(true)}>
-            Add Follow-up
+            {t('customers.add_follow_up')}
           </Button>
         }
       >
         <Table columns={followUpColumns} dataSource={customer.follow_ups} rowKey="id" pagination={false} />
       </Card>
 
-      <Modal title="Add Contact" open={contactModalVisible} onCancel={() => setContactModalVisible(false)} onOk={() => contactForm.submit()}>
+      <Modal title={t('customers.add_contact')} open={contactModalVisible} onCancel={() => setContactModalVisible(false)} onOk={() => contactForm.submit()}>
         <Form form={contactForm} onFinish={handleAddContact} layout="vertical">
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+          <Form.Item name="name" label={t('common.name')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="position" label="Position">
+          <Form.Item name="position" label={t('customers.position')}>
             <Input />
           </Form.Item>
-          <Form.Item name="phone" label="Phone">
+          <Form.Item name="phone" label={t('common.phone')}>
             <Input />
           </Form.Item>
-          <Form.Item name="email" label="Email">
+          <Form.Item name="email" label={t('common.email')}>
             <Input />
           </Form.Item>
         </Form>
       </Modal>
 
-      <Modal title="Add Follow-up" open={followUpModalVisible} onCancel={() => setFollowUpModalVisible(false)} onOk={() => followUpForm.submit()}>
+      <Modal title={t('customers.add_follow_up')} open={followUpModalVisible} onCancel={() => setFollowUpModalVisible(false)} onOk={() => followUpForm.submit()}>
         <Form form={followUpForm} onFinish={handleAddFollowUp} layout="vertical">
-          <Form.Item name="type" label="Type" rules={[{ required: true }]}>
+          <Form.Item name="type" label={t('common.type')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="content" label="Content" rules={[{ required: true }]}>
+          <Form.Item name="content" label={t('common.content')} rules={[{ required: true }]}>
             <Input.TextArea />
           </Form.Item>
         </Form>

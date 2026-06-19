@@ -6,12 +6,14 @@ import {
   CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { customerApi } from '../api/customers';
 import { orderApi } from '../api/orders';
 import { productionApi } from '../api/production';
 import { preferenceApi, DashboardConfig, DEFAULT_CONFIG } from '../api/preferences';
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState({
     customers: 0,
     orders: 0,
@@ -53,7 +55,7 @@ const Dashboard = () => {
     cards.push(
       <Col span={6} key="customers">
         <Card>
-          <Statistic title="Customers" value={stats.customers} prefix={<UserOutlined />} />
+          <Statistic title={t('dashboard.customers')} value={stats.customers} prefix={<UserOutlined />} />
         </Card>
       </Col>
     );
@@ -62,7 +64,7 @@ const Dashboard = () => {
     cards.push(
       <Col span={6} key="orders">
         <Card>
-          <Statistic title="Orders" value={stats.orders} prefix={<ShoppingCartOutlined />} />
+          <Statistic title={t('dashboard.orders')} value={stats.orders} prefix={<ShoppingCartOutlined />} />
         </Card>
       </Col>
     );
@@ -71,7 +73,7 @@ const Dashboard = () => {
     cards.push(
       <Col span={6} key="production">
         <Card>
-          <Statistic title="Production" value={stats.production} prefix={<ToolOutlined />} />
+          <Statistic title={t('dashboard.production')} value={stats.production} prefix={<ToolOutlined />} />
         </Card>
       </Col>
     );
@@ -80,7 +82,7 @@ const Dashboard = () => {
     cards.push(
       <Col span={6} key="quality">
         <Card>
-          <Statistic title="Quality" value={stats.quality} prefix={<CheckCircleOutlined />} />
+          <Statistic title={t('dashboard.quality')} value={stats.quality} prefix={<CheckCircleOutlined />} />
         </Card>
       </Col>
     );
@@ -88,7 +90,7 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h2>Dashboard</h2>
+      <h2>{t('dashboard.title')}</h2>
       <Row gutter={16}>
         {cards}
       </Row>

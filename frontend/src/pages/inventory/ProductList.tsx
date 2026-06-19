@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Table, Button, Space, Tag, Input, Modal, Form, InputNumber, Select, message, Drawer, Upload, Image, Popconfirm } from 'antd';
 import { PlusOutlined, SearchOutlined, ArrowUpOutlined, ArrowDownOutlined, HistoryOutlined, UploadOutlined, DeleteOutlined, EditOutlined, TagsOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { inventoryApi, FinishedProduct, StockTransaction, Category } from '../../api/inventory';
 
 const ProductList = () => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<FinishedProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -61,13 +63,13 @@ const ProductList = () => {
   const handleAdd = async (values: any) => {
     try {
       await inventoryApi.createProduct(values);
-      message.success('Product added');
+      message.success(t('inventory.product_added'));
       addForm.resetFields();
       setAddModalOpen(false);
       loadProducts(categoryFilter || undefined);
       loadCategories();
     } catch (error) {
-      message.error('Failed to add product');
+      message.error(t('inventory.product_add_failed'));
     }
   };
 
@@ -87,13 +89,13 @@ const ProductList = () => {
     setSubmitting(true);
     try {
       await inventoryApi.updateProduct(selectedProduct.id, values);
-      message.success('Product updated');
+      message.success(t('inventory.product_updated'));
       setEditModalOpen(false);
       loadProducts(categoryFilter || undefined);
       loadCategories();
     } catch (error: any) {
       const detail = error?.response?.data?.detail;
-      message.error(typeof detail === 'string' ? detail : 'Update failed');
+      message.error(typeof detail === 'string' ? detail : t('inventory.update_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -102,10 +104,10 @@ const ProductList = () => {
   const handleDelete = async (id: number) => {
     try {
       await inventoryApi.deleteProduct(id);
-      message.success('Product deleted');
+      message.success(t('inventory.product_deleted'));
       loadProducts(categoryFilter || undefined);
     } catch (error) {
-      message.error('Failed to delete product');
+      message.error(t('inventory.product_delete_failed'));
     }
   };
 
@@ -127,12 +129,12 @@ const ProductList = () => {
         quantity: values.quantity,
         reason: values.reason,
       });
-      message.success(`Stock ${stockType === 'in' ? '入库' : '出库'}成功`);
+      message.success(t('inventory.stock_success', { type: stockType === 'in' ? t('inventory.stock_in') : t('inventory.stock_out') }));
       setStockModalOpen(false);
       loadProducts(categoryFilter || undefined);
     } catch (error: any) {
       const detail = error?.response?.data?.detail;
-      message.error(typeof detail === 'string' ? detail : '操作失败');
+      message.error(typeof detail === 'string' ? detail : t('inventory.stock_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -146,7 +148,7 @@ const ProductList = () => {
       const res = await inventoryApi.listTransactions({ item_type: 'product', item_id: product.id, limit: 50 });
       setTransactions(res.data);
     } catch (error) {
-      message.error('Failed to load transactions');
+      message.error(t('inventory.load_transactions_failed'));
     } finally {
       setTxLoading(false);
     }
@@ -162,13 +164,13 @@ const ProductList = () => {
     setPhotoUploading(true);
     try {
       await inventoryApi.uploadProductPhoto(selectedProduct.id, file);
-      message.success('Photo uploaded');
+      message.success(t('inventory.photo_uploaded'));
       loadProducts(categoryFilter || undefined);
       const updated = await inventoryApi.listProducts({ limit: 100 });
       const refreshed = updated.data.find(p => p.id === selectedProduct.id);
       if (refreshed) setSelectedProduct(refreshed);
     } catch (error) {
-      message.error('Failed to upload photo');
+      message.error(t('inventory.photo_upload_failed'));
     } finally {
       setPhotoUploading(false);
     }
@@ -178,13 +180,13 @@ const ProductList = () => {
     if (!selectedProduct) return;
     try {
       await inventoryApi.removeProductPhoto(selectedProduct.id, photoUrl);
-      message.success('Photo removed');
+      message.success(t('inventory.photo_removed'));
       loadProducts(categoryFilter || undefined);
       const updated = await inventoryApi.listProducts({ limit: 100 });
       const refreshed = updated.data.find(p => p.id === selectedProduct.id);
       if (refreshed) setSelectedProduct(refreshed);
     } catch (error) {
-      message.error('Failed to remove photo');
+      message.error(t('inventory.photo_remove_failed'));
     }
   };
 
@@ -193,21 +195,21 @@ const ProductList = () => {
     if (!name) return;
     try {
       await inventoryApi.createCategory(name);
-      message.success('Category added');
+      message.success(t('inventory.category_added'));
       setNewCategoryName('');
       loadCategories();
     } catch (error: any) {
-      message.error(error?.response?.data?.detail || 'Failed to add category');
+      message.error(error?.response?.data?.detail || t('inventory.category_add_failed'));
     }
   };
 
   const handleDeleteCategory = async (id: number) => {
     try {
       await inventoryApi.deleteCategory(id);
-      message.success('Category deleted');
+      message.success(t('inventory.category_deleted'));
       loadCategories();
     } catch (error) {
-      message.error('Failed to delete category');
+      message.error(t('inventory.category_delete_failed'));
     }
   };
 
@@ -218,7 +220,7 @@ const ProductList = () => {
 
   const columns = [
     {
-      title: 'Photo',
+      title: t('inventory.photo'),
       key: 'photo',
       width: 80,
       render: (_: any, record: FinishedProduct) => {
@@ -230,35 +232,35 @@ const ProductList = () => {
         );
       },
     },
-    { title: 'SKU', dataIndex: 'sku', key: 'sku' },
-    { title: 'Product Name', dataIndex: 'product_name', key: 'product_name' },
+    { title: t('inventory.sku'), dataIndex: 'sku', key: 'sku' },
+    { title: t('inventory.product_name'), dataIndex: 'product_name', key: 'product_name' },
     {
-      title: 'Category',
+      title: t('inventory.category'),
       dataIndex: 'category',
       key: 'category',
-      render: (cat: string | null) => cat ? <Tag color="blue">{cat}</Tag> : <Tag>未分类</Tag>,
+      render: (cat: string | null) => cat ? <Tag color="blue">{cat}</Tag> : <Tag>{t('inventory.uncategorized')}</Tag>,
     },
     {
-      title: 'Current Stock',
+      title: t('inventory.current_stock'),
       dataIndex: 'current_stock',
       key: 'current_stock',
       render: (stock: number, record: FinishedProduct) => (
         <Tag color={stock < record.safety_stock ? 'red' : 'green'}>{stock}</Tag>
       ),
     },
-    { title: 'Safety Stock', dataIndex: 'safety_stock', key: 'safety_stock' },
+    { title: t('inventory.safety_stock'), dataIndex: 'safety_stock', key: 'safety_stock' },
     {
-      title: 'Action',
+      title: t('inventory.action'),
       key: 'action',
       render: (_: any, record: FinishedProduct) => (
         <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)}>编辑</Button>
-          <Button size="small" type="primary" icon={<ArrowDownOutlined />} onClick={() => openStockModal(record, 'in')}>入库</Button>
-          <Button size="small" danger icon={<ArrowUpOutlined />} onClick={() => openStockModal(record, 'out')}>出库</Button>
-          <Button size="small" icon={<HistoryOutlined />} onClick={() => showTransactions(record)}>记录</Button>
-          <Button size="small" icon={<UploadOutlined />} onClick={() => openPhotoModal(record)}>照片</Button>
-          <Popconfirm title="确定删除该产品？" onConfirm={() => handleDelete(record.id)}>
-            <Button size="small" danger icon={<DeleteOutlined />}>删除</Button>
+          <Button size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)}>{t('common.edit')}</Button>
+          <Button size="small" type="primary" icon={<ArrowDownOutlined />} onClick={() => openStockModal(record, 'in')}>{t('inventory.stock_in')}</Button>
+          <Button size="small" danger icon={<ArrowUpOutlined />} onClick={() => openStockModal(record, 'out')}>{t('inventory.stock_out')}</Button>
+          <Button size="small" icon={<HistoryOutlined />} onClick={() => showTransactions(record)}>{t('inventory.stock_records')}</Button>
+          <Button size="small" icon={<UploadOutlined />} onClick={() => openPhotoModal(record)}>{t('inventory.photo')}</Button>
+          <Popconfirm title={t('inventory.delete_confirm')} onConfirm={() => handleDelete(record.id)}>
+            <Button size="small" danger icon={<DeleteOutlined />}>{t('common.delete')}</Button>
           </Popconfirm>
         </Space>
       ),
@@ -267,14 +269,14 @@ const ProductList = () => {
 
   const txColumns = [
     {
-      title: 'Type',
+      title: t('common.type'),
       dataIndex: 'transaction_type',
       key: 'transaction_type',
-      render: (t: string) => <Tag color={t === 'in' ? 'green' : 'red'}>{t === 'in' ? '入库' : '出库'}</Tag>,
+      render: (val: string) => <Tag color={val === 'in' ? 'green' : 'red'}>{val === 'in' ? t('inventory.stock_in') : t('inventory.stock_out')}</Tag>,
     },
-    { title: 'Quantity', dataIndex: 'quantity', key: 'quantity' },
-    { title: 'Reason', dataIndex: 'reason', key: 'reason', render: (r: string) => r || '-' },
-    { title: 'Date', dataIndex: 'transaction_date', key: 'transaction_date' },
+    { title: t('inventory.quantity'), dataIndex: 'quantity', key: 'quantity' },
+    { title: t('common.reason'), dataIndex: 'reason', key: 'reason', render: (r: string) => r || '-' },
+    { title: t('common.date'), dataIndex: 'transaction_date', key: 'transaction_date' },
   ];
 
   const filtered = products.filter(
@@ -290,10 +292,10 @@ const ProductList = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2>Products</h2>
+        <h2>{t('inventory.products_title')}</h2>
         <Space>
           <Select
-            placeholder="All Categories"
+            placeholder={t('inventory.all_categories')}
             allowClear
             style={{ width: 160 }}
             value={categoryFilter || undefined}
@@ -301,71 +303,71 @@ const ProductList = () => {
             options={categoryOptions}
           />
           <Input
-            placeholder="Search products..."
+            placeholder={t('inventory.search_products')}
             prefix={<SearchOutlined />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: 250 }}
           />
-          <Button icon={<TagsOutlined />} onClick={() => setCategoryModalOpen(true)}>管理分类</Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalOpen(true)}>Add Product</Button>
+          <Button icon={<TagsOutlined />} onClick={() => setCategoryModalOpen(true)}>{t('inventory.manage_categories')}</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalOpen(true)}>{t('inventory.add_product')}</Button>
         </Space>
       </div>
       <Table columns={columns} dataSource={filtered} loading={loading} rowKey="id" />
 
-      <Modal title="Add Product" open={addModalOpen} onCancel={() => setAddModalOpen(false)} onOk={() => addForm.submit()}>
+      <Modal title={t('inventory.add_product')} open={addModalOpen} onCancel={() => setAddModalOpen(false)} onOk={() => addForm.submit()}>
         <Form form={addForm} onFinish={handleAdd} layout="vertical">
-          <Form.Item name="sku" label="SKU" rules={[{ required: true }]}>
+          <Form.Item name="sku" label={t('inventory.sku')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="product_name" label="Product Name" rules={[{ required: true }]}>
+          <Form.Item name="product_name" label={t('inventory.product_name')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="category" label="Category">
-            <Select allowClear placeholder="Select category" options={categoryOptions} />
+          <Form.Item name="category" label={t('inventory.category')}>
+            <Select allowClear placeholder={t('inventory.select_category')} options={categoryOptions} />
           </Form.Item>
-          <Form.Item name="safety_stock" label="Safety Stock" rules={[{ required: true }]}>
+          <Form.Item name="safety_stock" label={t('inventory.safety_stock')} rules={[{ required: true }]}>
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
         </Form>
       </Modal>
 
-      <Modal title="Edit Product" open={editModalOpen} onCancel={() => setEditModalOpen(false)} onOk={() => editForm.submit()} confirmLoading={submitting}>
+      <Modal title={t('inventory.edit_product')} open={editModalOpen} onCancel={() => setEditModalOpen(false)} onOk={() => editForm.submit()} confirmLoading={submitting}>
         <Form form={editForm} onFinish={handleEdit} layout="vertical">
-          <Form.Item name="sku" label="SKU" rules={[{ required: true }]}>
+          <Form.Item name="sku" label={t('inventory.sku')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="product_name" label="Product Name" rules={[{ required: true }]}>
+          <Form.Item name="product_name" label={t('inventory.product_name')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="category" label="Category">
-            <Select allowClear placeholder="Select category" options={categoryOptions} />
+          <Form.Item name="category" label={t('inventory.category')}>
+            <Select allowClear placeholder={t('inventory.select_category')} options={categoryOptions} />
           </Form.Item>
-          <Form.Item name="safety_stock" label="Safety Stock" rules={[{ required: true }]}>
+          <Form.Item name="safety_stock" label={t('inventory.safety_stock')} rules={[{ required: true }]}>
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title={`${stockType === 'in' ? '入库' : '出库'} - ${selectedProduct?.product_name}`}
+        title={`${stockType === 'in' ? t('inventory.stock_in') : t('inventory.stock_out')} - ${selectedProduct?.product_name}`}
         open={stockModalOpen}
         onCancel={() => setStockModalOpen(false)}
         onOk={() => stockForm.submit()}
         confirmLoading={submitting}
       >
         <Form form={stockForm} layout="vertical" onFinish={handleStockSubmit}>
-          <Form.Item name="quantity" label="数量" rules={[{ required: true, message: '请输入数量' }]}>
+          <Form.Item name="quantity" label={t('inventory.quantity')} rules={[{ required: true, message: t('inventory.quantity_required') }]}>
             <InputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="reason" label="备注">
-            <Input.TextArea rows={2} placeholder="入库/出库原因" />
+          <Form.Item name="reason" label={t('common.remark')}>
+            <Input.TextArea rows={2} placeholder={t('inventory.stock_reason_placeholder')} />
           </Form.Item>
         </Form>
       </Modal>
 
       <Drawer
-        title={`${selectedProduct?.product_name} - 库存记录`}
+        title={`${selectedProduct?.product_name} - ${t('inventory.stock_record_title')}`}
         open={txDrawerOpen}
         onClose={() => setTxDrawerOpen(false)}
         width={600}
@@ -374,7 +376,7 @@ const ProductList = () => {
       </Drawer>
 
       <Modal
-        title={`${selectedProduct?.product_name} - 产品照片`}
+        title={`${selectedProduct?.product_name} - ${t('inventory.product_photos')}`}
         open={photoModalOpen}
         onCancel={() => setPhotoModalOpen(false)}
         footer={null}
@@ -382,7 +384,7 @@ const ProductList = () => {
       >
         <div style={{ marginBottom: 16 }}>
           <Upload showUploadList={false} accept="image/*" customRequest={({ file }) => handlePhotoUpload(file as File)}>
-            <Button icon={<UploadOutlined />} loading={photoUploading}>上传照片</Button>
+            <Button icon={<UploadOutlined />} loading={photoUploading}>{t('inventory.upload_photo')}</Button>
           </Upload>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
@@ -392,12 +394,12 @@ const ProductList = () => {
               <Button type="primary" danger size="small" icon={<DeleteOutlined />} style={{ position: 'absolute', top: 4, right: 4 }} onClick={() => handleRemovePhoto(url)} />
             </div>
           ))}
-          {photos.length === 0 && <span style={{ color: '#999' }}>暂无照片</span>}
+          {photos.length === 0 && <span style={{ color: '#999' }}>{t('inventory.no_photos')}</span>}
         </div>
       </Modal>
 
       <Modal
-        title="管理产品分类"
+        title={t('inventory.manage_product_categories')}
         open={categoryModalOpen}
         onCancel={() => { setCategoryModalOpen(false); setNewCategoryName(''); }}
         footer={null}
@@ -405,12 +407,12 @@ const ProductList = () => {
       >
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <Input
-            placeholder="New category name"
+            placeholder={t('inventory.new_category_name')}
             value={newCategoryName}
             onChange={(e) => setNewCategoryName(e.target.value)}
             onPressEnter={handleAddCategory}
           />
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddCategory}>添加</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddCategory}>{t('common.add')}</Button>
         </div>
         <Table
           dataSource={categories}
@@ -418,13 +420,13 @@ const ProductList = () => {
           pagination={false}
           size="small"
           columns={[
-            { title: 'Category Name', dataIndex: 'name', key: 'name' },
+            { title: t('inventory.category_name'), dataIndex: 'name', key: 'name' },
             {
-              title: 'Action',
+              title: t('common.action'),
               key: 'action',
               width: 80,
               render: (_: any, record: Category) => (
-                <Popconfirm title="Delete this category?" onConfirm={() => handleDeleteCategory(record.id)}>
+                <Popconfirm title={t('inventory.delete_category_confirm')} onConfirm={() => handleDeleteCategory(record.id)}>
                   <Button type="link" danger size="small" icon={<DeleteOutlined />} />
                 </Popconfirm>
               ),

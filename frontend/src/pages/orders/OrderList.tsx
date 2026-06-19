@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Space, Tag } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { orderApi, Order } from '../../api/orders';
 
 const statusColors: Record<string, string> = {
@@ -13,6 +14,7 @@ const statusColors: Record<string, string> = {
 };
 
 const OrderList = () => {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -33,30 +35,39 @@ const OrderList = () => {
     loadOrders();
   }, []);
 
+  const STATUS_LABELS: Record<string, string> = {
+    pending: t('orders.status_pending'),
+    pending_approval: t('orders.status_pending_approval'),
+    confirmed: t('orders.status_confirmed'),
+    in_production: t('orders.status_in_production'),
+    completed: t('orders.status_completed'),
+    cancelled: t('orders.status_cancelled'),
+  };
+
   const columns = [
-    { title: 'Order No', dataIndex: 'order_no', key: 'order_no' },
-    { title: 'Customer ID', dataIndex: 'customer_id', key: 'customer_id' },
+    { title: t('orders.order_no'), dataIndex: 'order_no', key: 'order_no' },
+    { title: t('orders.customer_id'), dataIndex: 'customer_id', key: 'customer_id' },
     {
-      title: 'Total Amount',
+      title: t('orders.total_amount'),
       dataIndex: 'total_amount',
       key: 'total_amount',
       render: (val?: string | number) => (val != null ? `$${Number(val).toFixed(2)}` : '-'),
     },
-    { title: 'Delivery Date', dataIndex: 'delivery_date', key: 'delivery_date' },
+    { title: t('orders.delivery_date'), dataIndex: 'delivery_date', key: 'delivery_date' },
     {
-      title: 'Status',
+      title: t('orders.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
-        <Tag color={statusColors[status] ?? 'default'}>{status.toUpperCase()}</Tag>
+        <Tag color={statusColors[status] ?? 'default'}>{STATUS_LABELS[status] ?? status}</Tag>
       ),
     },
     {
-      title: 'Action',
+      title: t('orders.action'),
       key: 'action',
       render: (_: any, record: Order) => (
         <Button type="link" onClick={() => navigate(`/orders/${record.id}`)}>
-          View
+          {t('orders.view')}
         </Button>
       ),
     },
@@ -65,10 +76,10 @@ const OrderList = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2>Orders</h2>
+        <h2>{t('orders.title')}</h2>
         <Space>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/orders/create')}>
-            Create Order
+            {t('orders.create_order')}
           </Button>
         </Space>
       </div>

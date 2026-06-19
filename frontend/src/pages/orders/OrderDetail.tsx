@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, Descriptions, Table, Tag, Select, Button, message, Popconfirm } from 'antd';
 import { SendOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { orderApi, Order, OrderItem } from '../../api/orders';
 import { approvalApi } from '../../api/approvals';
 
@@ -16,20 +17,21 @@ const statusColors: Record<string, string> = {
   cancelled: 'red',
 };
 
-const statusLabels: Record<string, string> = {
-  pending: '待处理',
-  pending_approval: '待审批',
-  confirmed: '已确认',
-  in_production: '生产中',
-  completed: '已完成',
-  cancelled: '已取消',
-};
-
 const OrderDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<(Order & { items: OrderItem[] }) | null>(null);
   const [approvalRecords, setApprovalRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const statusLabels: Record<string, string> = {
+    pending: t('orders.status_pending'),
+    pending_approval: t('orders.status_pending_approval'),
+    confirmed: t('orders.status_confirmed'),
+    in_production: t('orders.status_in_production'),
+    completed: t('orders.status_completed'),
+    cancelled: t('orders.status_cancelled'),
+  };
 
   const loadOrder = async () => {
     if (!id) return;
@@ -58,10 +60,10 @@ const OrderDetail = () => {
     if (!id) return;
     try {
       await orderApi.updateStatus(parseInt(id), status);
-      message.success('状态已更新');
+      message.success(t('orders.status_updated'));
       loadOrder();
     } catch (error) {
-      message.error('更新状态失败');
+      message.error(t('orders.status_update_failed'));
     }
   };
 
@@ -69,57 +71,57 @@ const OrderDetail = () => {
     if (!id) return;
     try {
       await orderApi.submitForApproval(parseInt(id));
-      message.success('已提交审批');
+      message.success(t('orders.submitted_for_approval'));
       loadOrder();
     } catch (error: any) {
-      message.error(error?.response?.data?.detail || '提交审批失败');
+      message.error(error?.response?.data?.detail || t('orders.submit_approval_failed'));
     }
   };
 
   if (!order) return null;
 
   const itemColumns = [
-    { title: '产品名称', dataIndex: 'product_name', key: 'product_name' },
-    { title: '数量', dataIndex: 'quantity', key: 'quantity' },
+    { title: t('orders.product_name'), dataIndex: 'product_name', key: 'product_name' },
+    { title: t('orders.quantity'), dataIndex: 'quantity', key: 'quantity' },
     {
-      title: '单价',
+      title: t('orders.unit_price'),
       dataIndex: 'unit_price',
       key: 'unit_price',
       render: (val?: string | number) => (val != null ? `¥${Number(val).toFixed(2)}` : '-'),
     },
-    { title: '规格', dataIndex: 'specs', key: 'specs' },
+    { title: t('orders.specs'), dataIndex: 'specs', key: 'specs' },
   ];
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2>订单详情</h2>
+        <h2>{t('orders.detail_title')}</h2>
         {order.status === 'pending' && (
-          <Popconfirm title="确定提交审批吗？" onConfirm={handleSubmitApproval}>
-            <Button type="primary" icon={<SendOutlined />}>发起审批</Button>
+          <Popconfirm title={t('orders.confirm_submit_approval')} onConfirm={handleSubmitApproval}>
+            <Button type="primary" icon={<SendOutlined />}>{t('orders.submit_approval')}</Button>
           </Popconfirm>
         )}
       </div>
       <Card loading={loading}>
         <Descriptions bordered column={2}>
-          <Descriptions.Item label="订单号">{order.order_no}</Descriptions.Item>
-          <Descriptions.Item label="客户ID">{order.customer_id}</Descriptions.Item>
-          <Descriptions.Item label="总金额">
+          <Descriptions.Item label={t('orders.order_number')}>{order.order_no}</Descriptions.Item>
+          <Descriptions.Item label={t('orders.customer_id')}>{order.customer_id}</Descriptions.Item>
+          <Descriptions.Item label={t('orders.total_amount')}>
             {order.total_amount != null ? `¥${Number(order.total_amount).toFixed(2)}` : '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="交货日期">{order.delivery_date ?? '-'}</Descriptions.Item>
-          <Descriptions.Item label="状态">
+          <Descriptions.Item label={t('orders.delivery_date')}>{order.delivery_date ?? '-'}</Descriptions.Item>
+          <Descriptions.Item label={t('orders.status')}>
             <Tag color={statusColors[order.status] ?? 'default'}>
               {statusLabels[order.status] ?? order.status}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="创建时间">{order.created_at}</Descriptions.Item>
-          <Descriptions.Item label="备注" span={2}>{order.remarks ?? '-'}</Descriptions.Item>
+          <Descriptions.Item label={t('common.created_at')}>{order.created_at}</Descriptions.Item>
+          <Descriptions.Item label={t('orders.remarks')} span={2}>{order.remarks ?? '-'}</Descriptions.Item>
         </Descriptions>
       </Card>
 
       {order.status !== 'pending_approval' && (
-        <Card title="变更状态" style={{ marginTop: 16 }}>
+        <Card title={t('orders.change_status')} style={{ marginTop: 16 }}>
           <Select
             value={order.status}
             onChange={handleStatusChange}
@@ -129,28 +131,28 @@ const OrderDetail = () => {
         </Card>
       )}
 
-      <Card title="订单明细" style={{ marginTop: 16 }}>
+      <Card title={t('orders.order_items')} style={{ marginTop: 16 }}>
         <Table columns={itemColumns} dataSource={order.items} rowKey="id" pagination={false} />
       </Card>
 
       {approvalRecords.length > 0 && (
-        <Card title="审批记录" style={{ marginTop: 16 }}>
+        <Card title={t('orders.approval_records')} style={{ marginTop: 16 }}>
           <Table
             columns={[
-              { title: '审批节点', dataIndex: 'node_name', key: 'node_name' },
+              { title: t('orders.approval_node'), dataIndex: 'node_name', key: 'node_name' },
               {
-                title: '操作',
+                title: t('common.operation'),
                 dataIndex: 'action',
                 key: 'action',
                 render: (action: string) => (
                   <Tag color={action === 'approve' ? 'green' : 'red'}>
-                    {action === 'approve' ? '通过' : '驳回'}
+                    {action === 'approve' ? t('orders.action_approve') : t('orders.action_reject')}
                   </Tag>
                 ),
               },
-              { title: '审批人ID', dataIndex: 'approver_id', key: 'approver_id' },
-              { title: '备注', dataIndex: 'comment', key: 'comment', render: (v: string) => v || '-' },
-              { title: '时间', dataIndex: 'created_at', key: 'created_at' },
+              { title: t('orders.approver_id'), dataIndex: 'approver_id', key: 'approver_id' },
+              { title: t('common.remark'), dataIndex: 'comment', key: 'comment', render: (v: string) => v || '-' },
+              { title: t('common.time'), dataIndex: 'created_at', key: 'created_at' },
             ]}
             dataSource={approvalRecords}
             rowKey="id"

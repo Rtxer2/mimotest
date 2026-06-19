@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Space, Tag, Input, Modal, Form, Select, message } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { customerApi, Customer, CustomerCreate } from '../../api/customers';
 
 const CustomerList = () => {
+  const { t } = useTranslation();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -33,16 +35,16 @@ const CustomerList = () => {
     setSubmitting(true);
     try {
       await customerApi.create(values);
-      message.success('Customer created successfully');
+      message.success(t('customers.create_success'));
       setModalOpen(false);
       form.resetFields();
       loadCustomers();
     } catch (error: any) {
       const detail = error?.response?.data?.detail;
       if (Array.isArray(detail)) {
-        message.error(`Validation error: ${detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join('; ')}`);
+        message.error(`${t('common.validation_error')}: ${detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join('; ')}`);
       } else {
-        message.error(`Failed to create customer: ${detail || error?.message || 'Unknown error'}`);
+        message.error(`${t('customers.create_failed')}: ${detail || error?.message || t('common.unknown_error')}`);
       }
       console.error('Customer creation error:', error?.response?.data);
     } finally {
@@ -51,35 +53,35 @@ const CustomerList = () => {
   };
 
   const columns = [
-    { title: 'Code', dataIndex: 'code', key: 'code' },
-    { title: 'Name', dataIndex: 'name', key: 'name' },
-    { title: 'Country', dataIndex: 'country', key: 'country' },
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Phone', dataIndex: 'phone', key: 'phone' },
+    { title: t('customers.code'), dataIndex: 'code', key: 'code' },
+    { title: t('customers.name'), dataIndex: 'name', key: 'name' },
+    { title: t('customers.country'), dataIndex: 'country', key: 'country' },
+    { title: t('customers.email'), dataIndex: 'email', key: 'email' },
+    { title: t('customers.phone'), dataIndex: 'phone', key: 'phone' },
     {
-      title: 'Level',
+      title: t('customers.level'),
       dataIndex: 'level',
       key: 'level',
       render: (level: string) => (
         <Tag color={level === 'vip' ? 'gold' : level === 'important' ? 'blue' : 'default'}>
-          {level.toUpperCase()}
+          {level === 'vip' ? t('customers.level_vip') : level === 'important' ? t('customers.level_important') : t('customers.level_normal')}
         </Tag>
       ),
     },
     {
-      title: 'Status',
+      title: t('customers.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>{status.toUpperCase()}</Tag>
+        <Tag color={status === 'active' ? 'green' : 'red'}>{status === 'active' ? t('common.active') : t('common.inactive')}</Tag>
       ),
     },
     {
-      title: 'Action',
+      title: t('customers.action'),
       key: 'action',
       render: (_: any, record: Customer) => (
         <Button type="link" onClick={() => navigate(`/customers/${record.id}`)}>
-          View
+          {t('customers.view')}
         </Button>
       ),
     },
@@ -94,24 +96,24 @@ const CustomerList = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2>Customers</h2>
+        <h2>{t('customers.title')}</h2>
         <Space>
           <Input
-            placeholder="Search customers..."
+            placeholder={t('customers.search_placeholder')}
             prefix={<SearchOutlined />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: 250 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
-            Add Customer
+            {t('customers.add_customer')}
           </Button>
         </Space>
       </div>
       <Table columns={columns} dataSource={filteredCustomers} loading={loading} rowKey="id" />
 
       <Modal
-        title="Add Customer"
+        title={t('customers.add_customer_modal')}
         open={modalOpen}
         onCancel={() => {
           setModalOpen(false);
@@ -121,31 +123,31 @@ const CustomerList = () => {
         confirmLoading={submitting}
       >
         <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please enter customer name' }]}>
+          <Form.Item name="name" label={t('customers.name')} rules={[{ required: true, message: t('customers.name_required') }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="code" label="Code" rules={[{ required: true, message: 'Please enter customer code' }]}>
+          <Form.Item name="code" label={t('customers.code')} rules={[{ required: true, message: t('customers.code_required') }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="level" label="Level" initialValue="normal">
+          <Form.Item name="level" label={t('customers.level')} initialValue="normal">
             <Select
               options={[
-                { value: 'normal', label: 'Normal' },
-                { value: 'important', label: 'Important' },
-                { value: 'vip', label: 'VIP' },
+                { value: 'normal', label: t('customers.level_normal') },
+                { value: 'important', label: t('customers.level_important') },
+                { value: 'vip', label: t('customers.level_vip') },
               ]}
             />
           </Form.Item>
-          <Form.Item name="country" label="Country">
+          <Form.Item name="country" label={t('customers.country')}>
             <Input />
           </Form.Item>
-          <Form.Item name="email" label="Email">
+          <Form.Item name="email" label={t('customers.email')}>
             <Input />
           </Form.Item>
-          <Form.Item name="phone" label="Phone">
+          <Form.Item name="phone" label={t('customers.phone')}>
             <Input />
           </Form.Item>
-          <Form.Item name="address" label="Address">
+          <Form.Item name="address" label={t('customers.address')}>
             <Input.TextArea rows={2} />
           </Form.Item>
         </Form>

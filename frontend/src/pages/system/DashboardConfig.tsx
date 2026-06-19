@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Card, Switch, Button, message, Spin } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { preferenceApi, DashboardConfig, DEFAULT_CONFIG } from '../../api/preferences';
 
 const DashboardConfigPage = () => {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<DashboardConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,9 +27,9 @@ const DashboardConfigPage = () => {
     setSaving(true);
     try {
       await preferenceApi.save(config);
-      message.success('配置已保存');
+      message.success(t('system.config_saved'));
     } catch {
-      message.error('保存失败');
+      message.error(t('system.config_save_failed'));
     } finally {
       setSaving(false);
     }
@@ -52,59 +54,59 @@ const DashboardConfigPage = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2>仪表盘配置</h2>
-        <Button type="primary" loading={saving} onClick={handleSave}>保存</Button>
+        <h2>{t('system.dashboard_config_title')}</h2>
+        <Button type="primary" loading={saving} onClick={handleSave}>{t('common.save')}</Button>
       </div>
 
-      <Card title="首页 Dashboard">
+      <Card title={t('system.dashboard_section')}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>客户总数</span>
+            <span>{t('system.total_customers')}</span>
             <Switch checked={config.dashboard.customers} onChange={(v) => updateDashboard('customers', v)} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>订单总数</span>
+            <span>{t('system.total_orders')}</span>
             <Switch checked={config.dashboard.orders} onChange={(v) => updateDashboard('orders', v)} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>生产工单</span>
+            <span>{t('system.production_orders')}</span>
             <Switch checked={config.dashboard.production} onChange={(v) => updateDashboard('production', v)} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>质量统计</span>
+            <span>{t('system.quality_stats')}</span>
             <Switch checked={config.dashboard.quality} onChange={(v) => updateDashboard('quality', v)} />
           </div>
         </div>
       </Card>
 
-      <Card title="数据大屏" style={{ marginTop: 16 }}>
+      <Card title={t('system.analytics_section')} style={{ marginTop: 16 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>核心指标卡片</span>
+            <span>{t('system.metrics_cards')}</span>
             <Switch checked={config.analytics.metrics} onChange={(v) => updateAnalytics('metrics', v)} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>订单趋势图</span>
+            <span>{t('system.order_trend_chart')}</span>
             <Switch checked={config.analytics.order_trend} onChange={(v) => updateAnalytics('order_trend', v)} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>订单状态分布</span>
+            <span>{t('system.order_status_distribution')}</span>
             <Switch checked={config.analytics.order_status} onChange={(v) => updateAnalytics('order_status', v)} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>生产工单统计</span>
+            <span>{t('system.production_order_stats')}</span>
             <Switch checked={config.analytics.production_stats} onChange={(v) => updateAnalytics('production_stats', v)} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>库存概览</span>
+            <span>{t('system.inventory_overview')}</span>
             <Switch checked={config.analytics.inventory_stats} onChange={(v) => updateAnalytics('inventory_stats', v)} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>质量统计</span>
+            <span>{t('system.quality_stats')}</span>
             <Switch checked={config.analytics.quality_stats} onChange={(v) => updateAnalytics('quality_stats', v)} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>审批概览</span>
+            <span>{t('system.approval_overview')}</span>
             <Switch checked={config.analytics.approval_stats} onChange={(v) => updateAnalytics('approval_stats', v)} />
           </div>
         </div>

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Table, Button, Space, Tag, Input, Modal, Form, InputNumber, message, Drawer } from 'antd';
 import { PlusOutlined, SearchOutlined, ArrowUpOutlined, ArrowDownOutlined, HistoryOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { inventoryApi, Material, StockTransaction } from '../../api/inventory';
 
 const MaterialList = () => {
+  const { t } = useTranslation();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -37,12 +39,12 @@ const MaterialList = () => {
   const handleAdd = async (values: any) => {
     try {
       await inventoryApi.createMaterial(values);
-      message.success('Material added');
+      message.success(t('inventory.material_added'));
       addForm.resetFields();
       setAddModalOpen(false);
       loadMaterials();
     } catch (error) {
-      message.error('Failed to add material');
+      message.error(t('inventory.material_add_failed'));
     }
   };
 
@@ -64,12 +66,12 @@ const MaterialList = () => {
         quantity: values.quantity,
         reason: values.reason,
       });
-      message.success(`Stock ${stockType === 'in' ? '入库' : '出库'}成功`);
+      message.success(t('inventory.stock_success', { type: stockType === 'in' ? t('inventory.stock_in') : t('inventory.stock_out') }));
       setStockModalOpen(false);
       loadMaterials();
     } catch (error: any) {
       const detail = error?.response?.data?.detail;
-      message.error(typeof detail === 'string' ? detail : '操作失败');
+      message.error(typeof detail === 'string' ? detail : t('inventory.stock_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -83,38 +85,38 @@ const MaterialList = () => {
       const res = await inventoryApi.listTransactions({ item_type: 'material', item_id: material.id, limit: 50 });
       setTransactions(res.data);
     } catch (error) {
-      message.error('Failed to load transactions');
+      message.error(t('inventory.load_transactions_failed'));
     } finally {
       setTxLoading(false);
     }
   };
 
   const columns = [
-    { title: 'Code', dataIndex: 'code', key: 'code' },
-    { title: 'Name', dataIndex: 'name', key: 'name' },
-    { title: 'Unit', dataIndex: 'unit', key: 'unit' },
+    { title: t('inventory.code'), dataIndex: 'code', key: 'code' },
+    { title: t('inventory.name'), dataIndex: 'name', key: 'name' },
+    { title: t('inventory.unit'), dataIndex: 'unit', key: 'unit' },
     {
-      title: 'Current Stock',
+      title: t('inventory.current_stock'),
       dataIndex: 'current_stock',
       key: 'current_stock',
       render: (stock: number, record: Material) => (
         <Tag color={stock < record.safety_stock ? 'red' : 'green'}>{stock}</Tag>
       ),
     },
-    { title: 'Safety Stock', dataIndex: 'safety_stock', key: 'safety_stock' },
+    { title: t('inventory.safety_stock'), dataIndex: 'safety_stock', key: 'safety_stock' },
     {
-      title: 'Action',
+      title: t('inventory.action'),
       key: 'action',
       render: (_: any, record: Material) => (
         <Space>
           <Button size="small" type="primary" icon={<ArrowDownOutlined />} onClick={() => openStockModal(record, 'in')}>
-            入库
+            {t('inventory.stock_in')}
           </Button>
           <Button size="small" danger icon={<ArrowUpOutlined />} onClick={() => openStockModal(record, 'out')}>
-            出库
+            {t('inventory.stock_out')}
           </Button>
           <Button size="small" icon={<HistoryOutlined />} onClick={() => showTransactions(record)}>
-            记录
+            {t('inventory.stock_records')}
           </Button>
         </Space>
       ),
@@ -123,16 +125,16 @@ const MaterialList = () => {
 
   const txColumns = [
     {
-      title: 'Type',
+      title: t('common.type'),
       dataIndex: 'transaction_type',
       key: 'transaction_type',
-      render: (t: string) => (
-        <Tag color={t === 'in' ? 'green' : 'red'}>{t === 'in' ? '入库' : '出库'}</Tag>
+      render: (val: string) => (
+        <Tag color={val === 'in' ? 'green' : 'red'}>{val === 'in' ? t('inventory.stock_in') : t('inventory.stock_out')}</Tag>
       ),
     },
-    { title: 'Quantity', dataIndex: 'quantity', key: 'quantity' },
-    { title: 'Reason', dataIndex: 'reason', key: 'reason', render: (r: string) => r || '-' },
-    { title: 'Date', dataIndex: 'transaction_date', key: 'transaction_date' },
+    { title: t('inventory.quantity'), dataIndex: 'quantity', key: 'quantity' },
+    { title: t('common.reason'), dataIndex: 'reason', key: 'reason', render: (r: string) => r || '-' },
+    { title: t('common.date'), dataIndex: 'transaction_date', key: 'transaction_date' },
   ];
 
   const filtered = materials.filter(
@@ -144,63 +146,63 @@ const MaterialList = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2>Materials</h2>
+        <h2>{t('inventory.materials_title')}</h2>
         <Space>
           <Input
-            placeholder="Search materials..."
+            placeholder={t('inventory.search_materials')}
             prefix={<SearchOutlined />}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: 250 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalOpen(true)}>
-            Add Material
+            {t('inventory.add_material')}
           </Button>
         </Space>
       </div>
       <Table columns={columns} dataSource={filtered} loading={loading} rowKey="id" />
 
       <Modal
-        title="Add Material"
+        title={t('inventory.add_material')}
         open={addModalOpen}
         onCancel={() => setAddModalOpen(false)}
         onOk={() => addForm.submit()}
       >
         <Form form={addForm} onFinish={handleAdd} layout="vertical">
-          <Form.Item name="code" label="Code" rules={[{ required: true }]}>
+          <Form.Item name="code" label={t('inventory.code')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+          <Form.Item name="name" label={t('inventory.name')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="unit" label="Unit" rules={[{ required: true }]}>
+          <Form.Item name="unit" label={t('inventory.unit')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="safety_stock" label="Safety Stock" rules={[{ required: true }]}>
+          <Form.Item name="safety_stock" label={t('inventory.safety_stock')} rules={[{ required: true }]}>
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title={`${stockType === 'in' ? '入库' : '出库'} - ${selectedMaterial?.name}`}
+        title={`${stockType === 'in' ? t('inventory.stock_in') : t('inventory.stock_out')} - ${selectedMaterial?.name}`}
         open={stockModalOpen}
         onCancel={() => setStockModalOpen(false)}
         onOk={() => stockForm.submit()}
         confirmLoading={submitting}
       >
         <Form form={stockForm} layout="vertical" onFinish={handleStockSubmit}>
-          <Form.Item name="quantity" label="数量" rules={[{ required: true, message: '请输入数量' }]}>
+          <Form.Item name="quantity" label={t('inventory.quantity')} rules={[{ required: true, message: t('inventory.quantity_required') }]}>
             <InputNumber min={0.01} step={0.01} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="reason" label="备注">
-            <Input.TextArea rows={2} placeholder="入库/出库原因" />
+          <Form.Item name="reason" label={t('common.remark')}>
+            <Input.TextArea rows={2} placeholder={t('inventory.stock_reason_placeholder')} />
           </Form.Item>
         </Form>
       </Modal>
 
       <Drawer
-        title={`${selectedMaterial?.name} - 库存记录`}
+        title={`${selectedMaterial?.name} - ${t('inventory.stock_record_title')}`}
         open={txDrawerOpen}
         onClose={() => setTxDrawerOpen(false)}
         width={600}

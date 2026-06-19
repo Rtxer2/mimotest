@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Tag, Space, Modal, Input, message } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { approvalApi, ApprovalInstance } from '../../api/approvals';
 
 const statusColors: Record<string, string> = {
@@ -11,13 +12,8 @@ const statusColors: Record<string, string> = {
   cancelled: 'default',
 };
 
-const businessTypeLabels: Record<string, string> = {
-  order: '订单',
-  production: '生产工单',
-  purchase: '采购单',
-};
-
 const PendingList = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [instances, setInstances] = useState<ApprovalInstance[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,13 +22,19 @@ const PendingList = () => {
   const [currentAction, setCurrentAction] = useState<'approve' | 'reject'>('approve');
   const [comment, setComment] = useState('');
 
+  const businessTypeLabels: Record<string, string> = {
+    order: t('approvals.business_type_order'),
+    production: t('approvals.business_type_production'),
+    purchase: t('approvals.business_type_purchase'),
+  };
+
   const loadPending = async () => {
     setLoading(true);
     try {
       const res = await approvalApi.getPending({ limit: 50 });
       setInstances(res.data);
     } catch (error) {
-      message.error('Failed to load pending approvals');
+      message.error(t('approvals.load_pending_failed'));
     } finally {
       setLoading(false);
     }
@@ -47,16 +49,16 @@ const PendingList = () => {
     try {
       if (currentAction === 'approve') {
         await approvalApi.approve(currentInstanceId, comment);
-        message.success('Approved');
+        message.success(t('approvals.approved'));
       } else {
         await approvalApi.reject(currentInstanceId, comment);
-        message.success('Rejected');
+        message.success(t('approvals.rejected'));
       }
       setCommentModalOpen(false);
       setComment('');
       loadPending();
     } catch (error: any) {
-      message.error(error?.response?.data?.detail || 'Operation failed');
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
     }
   };
 
@@ -68,36 +70,36 @@ const PendingList = () => {
 
   const columns = [
     {
-      title: '业务类型',
+      title: t('approvals.business_type'),
       dataIndex: 'business_type',
       key: 'business_type',
       render: (type: string) => businessTypeLabels[type] || type,
     },
     {
-      title: '单据ID',
+      title: t('approvals.business_id'),
       dataIndex: 'business_id',
       key: 'business_id',
     },
     {
-      title: '状态',
+      title: t('approvals.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status: string) => <Tag color={statusColors[status]}>{status}</Tag>,
     },
     {
-      title: '当前节点',
+      title: t('approvals.current_node'),
       dataIndex: 'current_node_order',
       key: 'current_node_order',
-      render: (order: number) => `第 ${order} 级`,
+      render: (order: number) => t('approvals.level_label', { level: order }),
     },
     {
-      title: '发起时间',
+      title: t('approvals.created_at'),
       dataIndex: 'created_at',
       key: 'created_at',
-      render: (t: string) => new Date(t).toLocaleString(),
+      render: (val: string) => new Date(val).toLocaleString(),
     },
     {
-      title: '操作',
+      title: t('approvals.action'),
       key: 'action',
       render: (_: any, record: ApprovalInstance) => (
         <Space>
@@ -107,7 +109,7 @@ const PendingList = () => {
             icon={<CheckOutlined />}
             onClick={() => openActionModal(record.id, 'approve')}
           >
-            通过
+            {t('approvals.approve')}
           </Button>
           <Button
             danger
@@ -115,13 +117,13 @@ const PendingList = () => {
             icon={<CloseOutlined />}
             onClick={() => openActionModal(record.id, 'reject')}
           >
-            驳回
+            {t('approvals.reject')}
           </Button>
           <Button
             size="small"
             onClick={() => navigate(`/approvals/${record.id}`)}
           >
-            详情
+            {t('approvals.detail')}
           </Button>
         </Space>
       ),
@@ -130,7 +132,7 @@ const PendingList = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16 }}>待我审批</h2>
+      <h2 style={{ marginBottom: 16 }}>{t('approvals.pending_title')}</h2>
       <Table
         columns={columns}
         dataSource={instances}
@@ -140,14 +142,14 @@ const PendingList = () => {
       />
 
       <Modal
-        title={currentAction === 'approve' ? '审批通过' : '审批驳回'}
+        title={currentAction === 'approve' ? t('approvals.approve_title') : t('approvals.reject_title')}
         open={commentModalOpen}
         onCancel={() => { setCommentModalOpen(false); setComment(''); }}
         onOk={handleAction}
       >
         <Input.TextArea
           rows={4}
-          placeholder="请输入审批意见（可选）"
+          placeholder={t('approvals.comment_placeholder')}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />

@@ -6,9 +6,11 @@ import {
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { productionApi, ProductionDashboard as DashboardData } from '../../api/production';
 
 const ProductionDashboard = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<DashboardData>({
     total_orders: 0,
     in_progress: 0,
@@ -30,26 +32,26 @@ const ProductionDashboard = () => {
 
   return (
     <div>
-      <h2>Production Dashboard</h2>
+      <h2>{t('production.dashboard_title')}</h2>
       <Row gutter={16}>
         <Col span={6}>
           <Card>
-            <Statistic title="Total Orders" value={stats.total_orders} prefix={<FileTextOutlined />} />
+            <Statistic title={t('production.total_orders')} value={stats.total_orders} prefix={<FileTextOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="In Progress" value={stats.in_progress} prefix={<SyncOutlined />} />
+            <Statistic title={t('production.in_progress')} value={stats.in_progress} prefix={<SyncOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Completed" value={stats.completed} prefix={<CheckCircleOutlined />} />
+            <Statistic title={t('production.completed')} value={stats.completed} prefix={<CheckCircleOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Delayed" value={stats.delayed} prefix={<ClockCircleOutlined />} />
+            <Statistic title={t('production.delayed')} value={stats.delayed} prefix={<ClockCircleOutlined />} />
           </Card>
         </Col>
       </Row>

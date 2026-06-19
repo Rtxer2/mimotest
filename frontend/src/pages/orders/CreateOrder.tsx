@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, DatePicker, Select, Table, InputNumber, Space, message, Card } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { orderApi, OrderCreate } from '../../api/orders';
 import { customerApi, Customer } from '../../api/customers';
 
 const CreateOrder = () => {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -30,14 +32,14 @@ const CreateOrder = () => {
         })),
       };
       await orderApi.create(data);
-      message.success('Order created');
+      message.success(t('orders.order_created'));
       navigate('/orders');
     } catch (error: any) {
       const detail = error?.response?.data?.detail;
       if (Array.isArray(detail)) {
-        message.error(`Validation error: ${detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join('; ')}`);
+        message.error(`${t('common.validation_error')}: ${detail.map((d: any) => `${d.loc?.join('.')}: ${d.msg}`).join('; ')}`);
       } else {
-        message.error(`Failed to create order: ${detail || error?.message || 'Unknown error'}`);
+        message.error(`${t('orders.create_failed')}: ${detail || error?.message || t('common.unknown_error')}`);
       }
       console.error('Order creation error:', error?.response?.data);
     } finally {
@@ -47,25 +49,25 @@ const CreateOrder = () => {
 
   return (
     <div>
-      <h2>Create Order</h2>
+      <h2>{t('orders.create_title')}</h2>
       <Card>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="customer_id" label="Customer" rules={[{ required: true }]}>
+          <Form.Item name="customer_id" label={t('orders.select_customer')} rules={[{ required: true }]}>
             <Select
               showSearch
-              placeholder="Select customer"
+              placeholder={t('orders.select_customer')}
               optionFilterProp="label"
               options={customers.map((c) => ({ label: `${c.name} (${c.code})`, value: c.id }))}
             />
           </Form.Item>
-          <Form.Item name="delivery_date" label="Delivery Date">
+          <Form.Item name="delivery_date" label={t('orders.delivery_date')}>
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="remarks" label="Remarks">
+          <Form.Item name="remarks" label={t('orders.remarks')}>
             <Input.TextArea rows={2} />
           </Form.Item>
 
-          <Card title="Order Items" style={{ marginBottom: 16 }}>
+          <Card title={t('orders.order_items')} style={{ marginBottom: 16 }}>
             <Form.List name="items">
               {(fields, { add, remove }) => (
                 <>
@@ -75,47 +77,47 @@ const CreateOrder = () => {
                     pagination={false}
                     columns={[
                       {
-                        title: 'Product Name',
+                        title: t('orders.product_name'),
                         dataIndex: 'product_name',
                         key: 'product_name',
                         render: (_: any, __: any, index: number) => (
                           <Form.Item name={[index, 'product_name']} rules={[{ required: true }]} noStyle>
-                            <Input placeholder="Product name" />
+                            <Input placeholder={t('orders.product_name')} />
                           </Form.Item>
                         ),
                       },
                       {
-                        title: 'Quantity',
+                        title: t('orders.quantity'),
                         dataIndex: 'quantity',
                         key: 'quantity',
                         render: (_: any, __: any, index: number) => (
                           <Form.Item name={[index, 'quantity']} rules={[{ required: true }]} noStyle>
-                            <InputNumber min={1} placeholder="Qty" />
+                            <InputNumber min={1} placeholder={t('orders.quantity')} />
                           </Form.Item>
                         ),
                       },
                       {
-                        title: 'Unit Price',
+                        title: t('orders.unit_price'),
                         dataIndex: 'unit_price',
                         key: 'unit_price',
                         render: (_: any, __: any, index: number) => (
                           <Form.Item name={[index, 'unit_price']} noStyle>
-                            <InputNumber min={0} step={0.01} placeholder="Price" />
+                            <InputNumber min={0} step={0.01} placeholder={t('orders.unit_price')} />
                           </Form.Item>
                         ),
                       },
                       {
-                        title: 'Specs',
+                        title: t('orders.specs'),
                         dataIndex: 'specs',
                         key: 'specs',
                         render: (_: any, __: any, index: number) => (
                           <Form.Item name={[index, 'specs']} noStyle>
-                            <Input placeholder="Specs" />
+                            <Input placeholder={t('orders.specs')} />
                           </Form.Item>
                         ),
                       },
                       {
-                        title: 'Action',
+                        title: t('common.action'),
                         key: 'action',
                         render: (_: any, __: any, index: number) => (
                           <MinusCircleOutlined onClick={() => remove(index)} style={{ color: 'red' }} />
@@ -129,7 +131,7 @@ const CreateOrder = () => {
                     icon={<PlusOutlined />}
                     style={{ marginTop: 8 }}
                   >
-                    Add Item
+                    {t('orders.add_item')}
                   </Button>
                 </>
               )}
@@ -139,9 +141,9 @@ const CreateOrder = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" loading={submitting}>
-                Submit
+                {t('orders.submit')}
               </Button>
-              <Button onClick={() => navigate('/orders')}>Cancel</Button>
+              <Button onClick={() => navigate('/orders')}>{t('common.cancel')}</Button>
             </Space>
           </Form.Item>
         </Form>

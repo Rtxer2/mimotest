@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Tag, Space } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useNotificationStore } from '../../store/notificationStore';
 import { Notification } from '../../api/notifications';
 
@@ -14,6 +15,7 @@ const typeColors: Record<string, string> = {
 };
 
 const NotificationList = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { notifications, loading, fetchNotifications, markAsRead, markAllAsRead } = useNotificationStore();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
@@ -28,42 +30,42 @@ const NotificationList = () => {
 
   const columns = [
     {
-      title: 'Status',
+      title: t('notifications.status'),
       key: 'status',
       width: 80,
       render: (_: any, record: Notification) => (
         <Tag color={record.is_read ? 'default' : 'green'}>
-          {record.is_read ? 'Read' : 'Unread'}
+          {record.is_read ? t('notifications.read') : t('notifications.unread')}
         </Tag>
       ),
     },
     {
-      title: 'Type',
+      title: t('notifications.type'),
       dataIndex: 'type',
       key: 'type',
       width: 100,
       render: (type: string) => <Tag color={typeColors[type] || 'default'}>{type}</Tag>,
     },
     {
-      title: 'Title',
+      title: t('notifications.notification_title'),
       dataIndex: 'title',
       key: 'title',
     },
     {
-      title: 'Content',
+      title: t('notifications.content'),
       dataIndex: 'content',
       key: 'content',
       ellipsis: true,
     },
     {
-      title: 'Time',
+      title: t('notifications.time'),
       dataIndex: 'created_at',
       key: 'created_at',
       width: 180,
-      render: (t: string) => new Date(t).toLocaleString(),
+      render: (val: string) => new Date(val).toLocaleString(),
     },
     {
-      title: 'Action',
+      title: t('notifications.action'),
       key: 'action',
       width: 120,
       render: (_: any, record: Notification) => (
@@ -74,7 +76,7 @@ const NotificationList = () => {
               icon={<CheckOutlined />}
               onClick={() => markAsRead(record.id)}
             >
-              Read
+              {t('notifications.read')}
             </Button>
           )}
           {record.link && (
@@ -86,7 +88,7 @@ const NotificationList = () => {
                 navigate(record.link);
               }}
             >
-              View
+              {t('notifications.view')}
             </Button>
           )}
         </Space>
@@ -97,22 +99,22 @@ const NotificationList = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2>Notifications</h2>
+        <h2>{t('notifications.title')}</h2>
         <Space>
           <Button
             type={filter === 'all' ? 'primary' : 'default'}
             onClick={() => setFilter('all')}
           >
-            All
+            {t('notifications.filter_all')}
           </Button>
           <Button
             type={filter === 'unread' ? 'primary' : 'default'}
             onClick={() => setFilter('unread')}
           >
-            Unread
+            {t('notifications.filter_unread')}
           </Button>
           <Button icon={<CheckOutlined />} onClick={markAllAsRead}>
-            Mark all read
+            {t('notifications.mark_all_read')}
           </Button>
         </Space>
       </div>

@@ -12,6 +12,7 @@ import {
   PieChart, Pie, Cell, Legend,
   BarChart, Bar,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import client from '../api/client';
 import { preferenceApi, DashboardConfig, DEFAULT_CONFIG } from '../api/preferences';
 
@@ -47,24 +48,25 @@ interface AnalyticsData {
   };
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: '待处理',
-  pending_approval: '待审批',
-  confirmed: '已确认',
-  production: '生产中',
-  in_progress: '进行中',
-  completed: '已完成',
-  cancelled: '已取消',
-  approved: '已通过',
-  rejected: '已驳回',
-};
-
 const PIE_COLORS = ['#1890ff', '#52c41a', '#faad14', '#ff4d4f', '#722ed1', '#13c2c2'];
 
 const AnalyticsDashboard = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [config, setConfig] = useState<DashboardConfig>(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(true);
+
+  const STATUS_LABELS: Record<string, string> = {
+    pending: t('analytics.status_pending'),
+    pending_approval: t('analytics.status_pending_approval'),
+    confirmed: t('analytics.status_confirmed'),
+    production: t('analytics.status_production'),
+    in_progress: t('analytics.status_in_progress'),
+    completed: t('analytics.status_completed'),
+    cancelled: t('analytics.status_cancelled'),
+    approved: t('analytics.status_approved'),
+    rejected: t('analytics.status_rejected'),
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -98,15 +100,15 @@ const AnalyticsDashboard = () => {
   }));
 
   const qualityData = [
-    { name: '通过', value: data.quality_stats.passed },
-    { name: '未通过', value: data.quality_stats.failed },
+    { name: t('analytics.result_pass'), value: data.quality_stats.passed },
+    { name: t('analytics.result_fail'), value: data.quality_stats.failed },
   ];
 
   const approvalData = [
-    { name: '待审批', value: data.approval_stats.pending },
-    { name: '已通过', value: data.approval_stats.approved },
-    { name: '已驳回', value: data.approval_stats.rejected },
-    { name: '已取消', value: data.approval_stats.cancelled },
+    { name: t('analytics.status_pending_approval'), value: data.approval_stats.pending },
+    { name: t('analytics.status_approved'), value: data.approval_stats.approved },
+    { name: t('analytics.status_rejected'), value: data.approval_stats.rejected },
+    { name: t('analytics.status_cancelled'), value: data.approval_stats.cancelled },
   ].filter((item) => item.value > 0);
 
   const hasTrendRow = config.analytics.order_trend || config.analytics.order_status;
@@ -114,38 +116,38 @@ const AnalyticsDashboard = () => {
 
   return (
     <div>
-      <h2>数据大屏</h2>
+      <h2>{t('analytics.title')}</h2>
 
       {config.analytics.metrics && (
         <Row gutter={16} style={{ marginBottom: 16 }}>
           <Col span={4}>
             <Card>
-              <Statistic title="客户总数" value={data.metrics.total_customers} prefix={<UserOutlined />} />
+              <Statistic title={t('analytics.total_customers')} value={data.metrics.total_customers} prefix={<UserOutlined />} />
             </Card>
           </Col>
           <Col span={4}>
             <Card>
-              <Statistic title="订单总数" value={data.metrics.total_orders} prefix={<ShoppingCartOutlined />} />
+              <Statistic title={t('analytics.total_orders')} value={data.metrics.total_orders} prefix={<ShoppingCartOutlined />} />
             </Card>
           </Col>
           <Col span={4}>
             <Card>
-              <Statistic title="订单总额" value={data.metrics.total_order_amount} prefix="¥" precision={2} />
+              <Statistic title={t('analytics.total_order_amount')} value={data.metrics.total_order_amount} prefix="¥" precision={2} />
             </Card>
           </Col>
           <Col span={4}>
             <Card>
-              <Statistic title="生产中工单" value={data.metrics.active_production_orders} prefix={<ToolOutlined />} />
+              <Statistic title={t('analytics.active_production_orders')} value={data.metrics.active_production_orders} prefix={<ToolOutlined />} />
             </Card>
           </Col>
           <Col span={4}>
             <Card>
-              <Statistic title="库存预警" value={data.metrics.low_stock_materials} prefix={<InboxOutlined />} valueStyle={{ color: data.metrics.low_stock_materials > 0 ? '#ff4d4f' : undefined }} />
+              <Statistic title={t('analytics.low_stock_materials')} value={data.metrics.low_stock_materials} prefix={<InboxOutlined />} valueStyle={{ color: data.metrics.low_stock_materials > 0 ? '#ff4d4f' : undefined }} />
             </Card>
           </Col>
           <Col span={4}>
             <Card>
-              <Statistic title="待审批" value={data.metrics.pending_approvals} prefix={<AuditOutlined />} valueStyle={{ color: data.metrics.pending_approvals > 0 ? '#faad14' : undefined }} />
+              <Statistic title={t('analytics.pending_approvals')} value={data.metrics.pending_approvals} prefix={<AuditOutlined />} valueStyle={{ color: data.metrics.pending_approvals > 0 ? '#faad14' : undefined }} />
             </Card>
           </Col>
         </Row>
@@ -155,7 +157,7 @@ const AnalyticsDashboard = () => {
         <Row gutter={16} style={{ marginBottom: 16 }}>
           {config.analytics.order_trend && (
             <Col span={config.analytics.order_status ? 16 : 24}>
-              <Card title="订单趋势">
+              <Card title={t('analytics.order_trend')}>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={data.order_trend}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -164,8 +166,8 @@ const AnalyticsDashboard = () => {
                     <YAxis yAxisId="right" orientation="right" />
                     <Tooltip />
                     <Legend />
-                    <Line yAxisId="left" type="monotone" dataKey="count" name="订单数" stroke="#1890ff" />
-                    <Line yAxisId="right" type="monotone" dataKey="amount" name="金额" stroke="#52c41a" />
+                    <Line yAxisId="left" type="monotone" dataKey="count" name={t('analytics.order_count')} stroke="#1890ff" />
+                    <Line yAxisId="right" type="monotone" dataKey="amount" name={t('analytics.amount')} stroke="#52c41a" />
                   </LineChart>
                 </ResponsiveContainer>
               </Card>
@@ -173,7 +175,7 @@ const AnalyticsDashboard = () => {
           )}
           {config.analytics.order_status && (
             <Col span={config.analytics.order_trend ? 8 : 24}>
-              <Card title="订单状态分布">
+              <Card title={t('analytics.order_status_distribution')}>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie data={orderStatusData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label>
@@ -195,14 +197,14 @@ const AnalyticsDashboard = () => {
         <Row gutter={16}>
           {config.analytics.production_stats && (
             <Col span={8}>
-              <Card title="生产工单统计">
+              <Card title={t('analytics.production_order_stats')}>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={productionData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="count" name="数量" fill="#1890ff" />
+                    <Bar dataKey="count" name={t('analytics.count')} fill="#1890ff" />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
@@ -210,7 +212,7 @@ const AnalyticsDashboard = () => {
           )}
           {config.analytics.quality_stats && (
             <Col span={8}>
-              <Card title="质量检验">
+              <Card title={t('analytics.quality_inspection')}>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie data={qualityData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label>
@@ -222,14 +224,14 @@ const AnalyticsDashboard = () => {
                   </PieChart>
                 </ResponsiveContainer>
                 <div style={{ textAlign: 'center', marginTop: 8 }}>
-                  检验总数: {data.quality_stats.total_inspections} | 未关闭问题: {data.quality_stats.open_issues}
+                  {t('analytics.total_inspections')}: {data.quality_stats.total_inspections} | {t('analytics.open_issues')}: {data.quality_stats.open_issues}
                 </div>
               </Card>
             </Col>
           )}
           {config.analytics.approval_stats && (
             <Col span={8}>
-              <Card title="审批概览">
+              <Card title={t('analytics.approval_overview')}>
                 <ResponsiveContainer width="100%" height={250}>
                   <PieChart>
                     <Pie data={approvalData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label>

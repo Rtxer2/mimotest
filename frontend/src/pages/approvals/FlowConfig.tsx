@@ -1,23 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Table, Button, Tag, Space, Modal, Form, Input, Select, InputNumber, Switch, message, Popconfirm } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { approvalApi, ApprovalFlow } from '../../api/approvals';
 
-const conditionTypeOptions = [
-  { value: 'amount', label: '金额阈值' },
-  { value: 'quantity', label: '数量阈值' },
-  { value: 'always', label: '始终审批' },
-  { value: 'manual', label: '仅手动' },
-];
-
-const conditionTypeLabels: Record<string, string> = {
-  amount: '金额阈值',
-  quantity: '数量阈值',
-  always: '始终审批',
-  manual: '仅手动',
-};
-
 const FlowConfig = () => {
+  const { t } = useTranslation();
   const [flows, setFlows] = useState<ApprovalFlow[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -25,13 +13,27 @@ const FlowConfig = () => {
   const [form] = Form.useForm();
   const conditionType = Form.useWatch('condition_type', form);
 
+  const conditionTypeOptions = [
+    { value: 'amount', label: t('approvals.condition_amount') },
+    { value: 'quantity', label: t('approvals.condition_quantity') },
+    { value: 'always', label: t('approvals.condition_always') },
+    { value: 'manual', label: t('approvals.condition_manual') },
+  ];
+
+  const conditionTypeLabels: Record<string, string> = {
+    amount: t('approvals.condition_amount'),
+    quantity: t('approvals.condition_quantity'),
+    always: t('approvals.condition_always'),
+    manual: t('approvals.condition_manual'),
+  };
+
   const loadFlows = async () => {
     setLoading(true);
     try {
       const res = await approvalApi.listFlows({ limit: 100 });
       setFlows(res.data);
     } catch (error) {
-      message.error('加载流程失败');
+      message.error(t('approvals.load_flows_failed'));
     } finally {
       setLoading(false);
     }
@@ -55,27 +57,27 @@ const FlowConfig = () => {
     try {
       if (editingFlow) {
         await approvalApi.updateFlow(editingFlow.id, submitData);
-        message.success('流程已更新');
+        message.success(t('approvals.flow_updated'));
       } else {
         await approvalApi.createFlow(submitData);
-        message.success('流程已创建');
+        message.success(t('approvals.flow_created'));
       }
       setModalOpen(false);
       form.resetFields();
       setEditingFlow(null);
       loadFlows();
     } catch (error: any) {
-      message.error(error?.response?.data?.detail || '操作失败');
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
       await approvalApi.deleteFlow(id);
-      message.success('流程已删除');
+      message.success(t('approvals.flow_deleted'));
       loadFlows();
     } catch (error) {
-      message.error('删除失败');
+      message.error(t('approvals.delete_failed'));
     }
   };
 
@@ -102,28 +104,28 @@ const FlowConfig = () => {
   };
 
   const columns = [
-    { title: '流程名称', dataIndex: 'name', key: 'name' },
-    { title: '业务类型', dataIndex: 'business_type', key: 'business_type' },
+    { title: t('approvals.flow_name'), dataIndex: 'name', key: 'name' },
+    { title: t('approvals.business_type'), dataIndex: 'business_type', key: 'business_type' },
     {
-      title: '触发条件',
+      title: t('approvals.trigger_condition'),
       dataIndex: 'trigger_condition',
       key: 'trigger_condition',
       render: renderTriggerCondition,
     },
     {
-      title: '状态',
+      title: t('approvals.status'),
       dataIndex: 'is_active',
       key: 'is_active',
-      render: (active: boolean) => <Tag color={active ? 'green' : 'red'}>{active ? '启用' : '禁用'}</Tag>,
+      render: (active: boolean) => <Tag color={active ? 'green' : 'red'}>{active ? t('approvals.status_active') : t('approvals.status_inactive')}</Tag>,
     },
     {
-      title: '操作',
+      title: t('approvals.action'),
       key: 'action',
       render: (_: any, record: ApprovalFlow) => (
         <Space>
-          <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)}>编辑</Button>
-          <Popconfirm title="确定删除这个流程吗？" onConfirm={() => handleDelete(record.id)}>
-            <Button danger size="small" icon={<DeleteOutlined />}>删除</Button>
+          <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(record)}>{t('approvals.edit')}</Button>
+          <Popconfirm title={t('approvals.delete_flow_confirm')} onConfirm={() => handleDelete(record.id)}>
+            <Button danger size="small" icon={<DeleteOutlined />}>{t('approvals.delete')}</Button>
           </Popconfirm>
         </Space>
       ),
@@ -133,46 +135,46 @@ const FlowConfig = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2>审批流程配置</h2>
+        <h2>{t('approvals.flow_config_title')}</h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => { setEditingFlow(null); form.resetFields(); setModalOpen(true); }}
         >
-          新建流程
+          {t('approvals.create_flow')}
         </Button>
       </div>
       <Table columns={columns} dataSource={flows} loading={loading} rowKey="id" />
 
       <Modal
-        title={editingFlow ? '编辑流程' : '新建流程'}
+        title={editingFlow ? t('approvals.edit_flow') : t('approvals.create_flow')}
         open={modalOpen}
         onCancel={() => { setModalOpen(false); setEditingFlow(null); }}
         onOk={() => form.submit()}
       >
         <Form form={form} layout="vertical" onFinish={handleSave}>
-          <Form.Item name="name" label="流程名称" rules={[{ required: true }]}>
+          <Form.Item name="name" label={t('approvals.flow_name')} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="business_type" label="业务类型" rules={[{ required: true }]}>
+          <Form.Item name="business_type" label={t('approvals.business_type')} rules={[{ required: true }]}>
             <Select
               options={[
-                { value: 'order', label: '订单' },
-                { value: 'production', label: '生产工单' },
-                { value: 'purchase', label: '采购单' },
+                { value: 'order', label: t('approvals.business_type_order') },
+                { value: 'production', label: t('approvals.business_type_production') },
+                { value: 'purchase', label: t('approvals.business_type_purchase') },
               ]}
             />
           </Form.Item>
-          <Form.Item name="condition_type" label="触发条件" rules={[{ required: true }]}>
+          <Form.Item name="condition_type" label={t('approvals.trigger_condition')} rules={[{ required: true }]}>
             <Select options={conditionTypeOptions} />
           </Form.Item>
           {(conditionType === 'amount' || conditionType === 'quantity') && (
-            <Form.Item name="threshold" label={conditionType === 'amount' ? '金额阈值' : '数量阈值'} rules={[{ required: true }]}>
+            <Form.Item name="threshold" label={t('approvals.threshold_label')} rules={[{ required: true }]}>
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
           )}
           {editingFlow && (
-            <Form.Item name="is_active" label="启用" valuePropName="checked">
+            <Form.Item name="is_active" label={t('approvals.status_active')} valuePropName="checked">
               <Switch />
             </Form.Item>
           )}

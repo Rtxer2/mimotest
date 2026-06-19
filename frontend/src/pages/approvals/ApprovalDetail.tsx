@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, Steps, Table, Button, Tag, Space, Modal, Input, message, Descriptions } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { approvalApi, ApprovalInstance, ApprovalNode, ApprovalRecord } from '../../api/approvals';
 
 const statusColors: Record<string, string> = {
@@ -11,18 +12,19 @@ const statusColors: Record<string, string> = {
   cancelled: 'default',
 };
 
-const businessTypeLabels: Record<string, string> = {
-  order: '订单',
-  production: '生产工单',
-  purchase: '采购单',
-};
-
 const ApprovalDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [instance, setInstance] = useState<(ApprovalInstance & { nodes: ApprovalNode[]; records: ApprovalRecord[] }) | null>(null);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [currentAction, setCurrentAction] = useState<'approve' | 'reject'>('approve');
   const [comment, setComment] = useState('');
+
+  const businessTypeLabels: Record<string, string> = {
+    order: t('approvals.business_type_order'),
+    production: t('approvals.business_type_production'),
+    purchase: t('approvals.business_type_purchase'),
+  };
 
   const loadDetail = async () => {
     if (!id) return;
@@ -30,7 +32,7 @@ const ApprovalDetail = () => {
       const res = await approvalApi.getDetail(parseInt(id));
       setInstance(res.data);
     } catch (error) {
-      message.error('Failed to load approval details');
+      message.error(t('approvals.load_detail_failed'));
     }
   };
 
@@ -43,16 +45,16 @@ const ApprovalDetail = () => {
     try {
       if (currentAction === 'approve') {
         await approvalApi.approve(parseInt(id), comment);
-        message.success('Approved');
+        message.success(t('approvals.approved'));
       } else {
         await approvalApi.reject(parseInt(id), comment);
-        message.success('Rejected');
+        message.success(t('approvals.rejected'));
       }
       setCommentModalOpen(false);
       setComment('');
       loadDetail();
     } catch (error: any) {
-      message.error(error?.response?.data?.detail || 'Operation failed');
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
     }
   };
 
@@ -67,7 +69,7 @@ const ApprovalDetail = () => {
 
   const recordColumns = [
     {
-      title: '节点',
+      title: t('approvals.node'),
       dataIndex: 'node_id',
       key: 'node_id',
       render: (nodeId: number) => {
@@ -76,54 +78,54 @@ const ApprovalDetail = () => {
       },
     },
     {
-      title: '审批人',
+      title: t('approvals.approver'),
       dataIndex: 'approver_id',
       key: 'approver_id',
     },
     {
-      title: '动作',
+      title: t('approvals.action_label'),
       dataIndex: 'action',
       key: 'action',
       render: (action: string) => (
         <Tag color={action === 'approve' ? 'green' : 'red'}>
-          {action === 'approve' ? '通过' : '驳回'}
+          {action === 'approve' ? t('approvals.approve') : t('approvals.reject')}
         </Tag>
       ),
     },
     {
-      title: '意见',
+      title: t('approvals.comment'),
       dataIndex: 'comment',
       key: 'comment',
     },
     {
-      title: '时间',
+      title: t('approvals.time'),
       dataIndex: 'created_at',
       key: 'created_at',
-      render: (t: string) => new Date(t).toLocaleString(),
+      render: (val: string) => new Date(val).toLocaleString(),
     },
   ];
 
   return (
     <div>
-      <h2 style={{ marginBottom: 16 }}>审批详情</h2>
+      <h2 style={{ marginBottom: 16 }}>{t('approvals.detail_title')}</h2>
 
       <Card style={{ marginBottom: 16 }}>
         <Descriptions>
-          <Descriptions.Item label="业务类型">{businessTypeLabels[instance.business_type] || instance.business_type}</Descriptions.Item>
-          <Descriptions.Item label="单据ID">{instance.business_id}</Descriptions.Item>
-          <Descriptions.Item label="状态"><Tag color={statusColors[instance.status]}>{instance.status}</Tag></Descriptions.Item>
-          <Descriptions.Item label="当前节点">第 {instance.current_node_order} 级</Descriptions.Item>
-          <Descriptions.Item label="发起时间">{new Date(instance.created_at).toLocaleString()}</Descriptions.Item>
+          <Descriptions.Item label={t('approvals.business_type')}>{businessTypeLabels[instance.business_type] || instance.business_type}</Descriptions.Item>
+          <Descriptions.Item label={t('approvals.business_id')}>{instance.business_id}</Descriptions.Item>
+          <Descriptions.Item label={t('approvals.status')}><Tag color={statusColors[instance.status]}>{instance.status}</Tag></Descriptions.Item>
+          <Descriptions.Item label={t('approvals.current_node')}>{t('approvals.level_label', { level: instance.current_node_order })}</Descriptions.Item>
+          <Descriptions.Item label={t('approvals.created_at')}>{new Date(instance.created_at).toLocaleString()}</Descriptions.Item>
         </Descriptions>
       </Card>
 
-      <Card title="审批流程" style={{ marginBottom: 16 }}>
+      <Card title={t('approvals.flow')} style={{ marginBottom: 16 }}>
         <Steps
           current={currentStep}
           status={instance.status === 'rejected' ? 'error' : instance.status === 'approved' ? 'finish' : 'process'}
           items={instance.nodes.map((node) => ({
             title: node.node_name,
-            description: `${node.approver_type === 'role' ? '角色' : '用户'}: ${node.approver_value}`,
+            description: `${node.approver_type === 'role' ? t('approvals.approver_type_role') : t('approvals.approver_type_user')}: ${node.approver_value}`,
           }))}
         />
       </Card>
@@ -132,16 +134,16 @@ const ApprovalDetail = () => {
         <Card style={{ marginBottom: 16 }}>
           <Space>
             <Button type="primary" icon={<CheckOutlined />} onClick={() => openActionModal('approve')}>
-              审批通过
+              {t('approvals.approve_title')}
             </Button>
             <Button danger icon={<CloseOutlined />} onClick={() => openActionModal('reject')}>
-              审批驳回
+              {t('approvals.reject_title')}
             </Button>
           </Space>
         </Card>
       )}
 
-      <Card title="审批记录">
+      <Card title={t('approvals.flow')}>
         <Table
           columns={recordColumns}
           dataSource={instance.records}
@@ -151,14 +153,14 @@ const ApprovalDetail = () => {
       </Card>
 
       <Modal
-        title={currentAction === 'approve' ? '审批通过' : '审批驳回'}
+        title={currentAction === 'approve' ? t('approvals.approve_title') : t('approvals.reject_title')}
         open={commentModalOpen}
         onCancel={() => { setCommentModalOpen(false); setComment(''); }}
         onOk={handleAction}
       >
         <Input.TextArea
           rows={4}
-          placeholder="请输入审批意见（可选）"
+          placeholder={t('approvals.comment_placeholder')}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
