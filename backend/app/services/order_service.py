@@ -136,3 +136,14 @@ class OrderService:
         self.db.commit()
         self.db.refresh(order)
         return order, None
+
+    def delete_order(self, order_id: int):
+        order = self.get_order(order_id)
+        if not order:
+            return False
+        if order.status not in ("pending", "cancelled"):
+            return False
+        self.db.query(OrderItem).filter(OrderItem.order_id == order_id).delete()
+        self.db.delete(order)
+        self.db.commit()
+        return True

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Space, Tag, message } from 'antd';
-import { PlusOutlined, FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Tag, message, Modal, Form, Input, InputNumber, Popconfirm } from 'antd';
+import { PlusOutlined, FileExcelOutlined, FilePdfOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { orderApi, Order } from '../../api/orders';
@@ -8,8 +8,9 @@ import { reportApi } from '../../api/reports';
 
 const statusColors: Record<string, string> = {
   pending: 'default',
+  pending_approval: 'orange',
   confirmed: 'blue',
-  in_production: 'orange',
+  in_production: 'cyan',
   completed: 'green',
   cancelled: 'red',
 };
@@ -18,6 +19,10 @@ const OrderList = () => {
   const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form] = Form.useForm();
   const navigate = useNavigate();
 
   const loadOrders = async () => {
@@ -36,6 +41,15 @@ const OrderList = () => {
     loadOrders();
   }, []);
 
+  const STATUS_LABELS: Record<string, string> = {
+    pending: t('orders.status_pending'),
+    pending_approval: t('orders.status_pending_approval'),
+    confirmed: t('orders.status_confirmed'),
+    in_production: t('orders.status_in_production'),
+    completed: t('orders.status_completed'),
+    cancelled: t('orders.status_cancelled'),
+  };
+
   const handleExport = async (format: string) => {
     try {
       const res = await reportApi.export('orders', format);
@@ -53,13 +67,44 @@ const OrderList = () => {
     }
   };
 
-  const STATUS_LABELS: Record<string, string> = {
-    pending: t('orders.status_pending'),
-    pending_approval: t('orders.status_pending_approval'),
-    confirmed: t('orders.status_confirmed'),
-    in_production: t('orders.status_in_production'),
-    completed: t('orders.status_completed'),
-    cancelled: t('orders.status_cancelled'),
+  const openEdit = (record: Order) => {
+    setEditingOrder(record);
+    form.setFieldsValue({
+      customer_id: record.customer_id,
+      delivery_date: record.delivery_date,
+      remarks: record.remarks,
+    });
+    setModalOpen(true);
+  };
+
+  const handleEdit = async (values: any) => {
+    if (!editingOrder) return;
+    setSubmitting(true);
+    try {
+      await orderApi.update(editingOrder.id, values);
+      message.success(t('common.save'));
+      setModalOpen(false);
+      setEditingOrder(null);
+      form.resetFields();
+      loadOrders();
+    } catch (error: any) {
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editingOrder) return;
+    try {
+      await orderApi.delete(editingOrder.id);
+      message.success(t('common.delete'));
+      setModalOpen(false);
+      setEditingOrder(null);
+      loadOrders();
+    } catch (error: any) {
+      message.error(error?.response?.data?.detail || t('common.operation_failed'));
+    }
   };
 
   const columns = [
@@ -69,7 +114,7 @@ const OrderList = () => {
       title: t('orders.total_amount'),
       dataIndex: 'total_amount',
       key: 'total_amount',
-      render: (val?: string | number) => (val != null ? `$${Number(val).toFixed(2)}` : '-'),
+      render: (val?: string | number) => (val != null ? `¥${Number(val).toFixed(2)}` : '-'),
     },
     { title: t('orders.delivery_date'), dataIndex: 'delivery_date', key: 'delivery_date' },
     {
@@ -84,9 +129,14 @@ const OrderList = () => {
       title: t('orders.action'),
       key: 'action',
       render: (_: any, record: Order) => (
-        <Button type="link" onClick={() => navigate(`/orders/${record.id}`)}>
-          {t('orders.view')}
-        </Button>
+        <Space>
+          <Button type="link" onClick={() => navigate(`/orders/${record.id}`)}>
+            {t('orders.view')}
+          </Button>
+          <Button type="link" icon={<EditOutlined />} onClick={() => openEdit(record)}>
+            {t('common.edit')}
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -104,6 +154,33 @@ const OrderList = () => {
         </Space>
       </div>
       <Table columns={columns} dataSource={orders} loading={loading} rowKey="id" />
+
+      <Modal
+        title={t('common.edit')}
+        open={modalOpen}
+        onCancel={() => { setModalOpen(false); setEditingOrder(null); }}
+        onOk={() => form.submit()}
+        confirmLoading={submitting}
+        footer={[
+          <Popconfirm key="delete" title={t('common.confirm')} onConfirm={handleDelete}>
+            <Button danger icon={<DeleteOutlined />}>{t('common.delete')}</Button>
+          </Popconfirm>,
+          <Button key="cancel" onClick={() => { setModalOpen(false); setEditingOrder(null); }}>{t('common.cancel')}</Button>,
+          <Button key="ok" type="primary" loading={submitting} onClick={() => form.submit()}>{t('common.save')}</Button>,
+        ]}
+      >
+        <Form form={form} layout="vertical" onFinish={handleEdit}>
+          <Form.Item name="customer_id" label={t('orders.customer_id')} rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="delivery_date" label={t('orders.delivery_date')}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="remarks" label={t('orders.remarks')}>
+            <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

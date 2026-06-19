@@ -68,3 +68,11 @@ def update_status(order_id: int, status: str, db: Session = Depends(get_db_sessi
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
+
+
+@router.delete("/{order_id}")
+def delete_order(order_id: int, db: Session = Depends(get_db_session), current_user: User = Depends(require_operator_or_above)):
+    service = OrderService(db)
+    if not service.delete_order(order_id):
+        raise HTTPException(status_code=400, detail="Cannot delete this order")
+    return {"message": "Order deleted"}

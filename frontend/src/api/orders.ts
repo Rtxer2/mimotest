@@ -51,4 +51,7 @@ export const orderApi = {
 
   submitForApproval: (id: number) =>
     client.post<Order>(`/orders/${id}/submit-approval`),
+
+  delete: (id: number) =>
+    client.delete(`/orders/${id}`),
 };
