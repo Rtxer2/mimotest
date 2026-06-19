@@ -54,6 +54,7 @@
     "inventory": "Inventory",
     "materials": "Materials",
     "products": "Products",
+    "inventory_alerts": "Alerts",
     "quality": "Quality",
     "inspections": "Inspections",
     "issues": "Issues",
@@ -223,6 +224,7 @@
   },
   "inventory": {
     "materials_title": "Materials",
+    "alerts_title": "Inventory Alerts",
     "search_materials": "Search materials...",
     "add_material": "Add Material",
     "material_added": "Material added",

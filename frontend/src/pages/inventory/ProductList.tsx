@@ -313,7 +313,7 @@ const ProductList = () => {
           <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalOpen(true)}>{t('inventory.add_product')}</Button>
         </Space>
       </div>
-      <Table columns={columns} dataSource={filtered} loading={loading} rowKey="id" />
+      <Table columns={columns} dataSource={filtered} loading={loading} rowKey="id" onRow={(record) => ({ style: record.current_stock < record.safety_stock && record.safety_stock > 0 ? { background: '#fff2f0' } : {} })} />
 
       <Modal title={t('inventory.add_product')} open={addModalOpen} onCancel={() => setAddModalOpen(false)} onOk={() => addForm.submit()}>
         <Form form={addForm} onFinish={handleAdd} layout="vertical">

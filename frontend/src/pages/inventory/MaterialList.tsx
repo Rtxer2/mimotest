@@ -160,7 +160,7 @@ const MaterialList = () => {
           </Button>
         </Space>
       </div>
-      <Table columns={columns} dataSource={filtered} loading={loading} rowKey="id" />
+      <Table columns={columns} dataSource={filtered} loading={loading} rowKey="id" onRow={(record) => ({ style: record.current_stock < record.safety_stock && record.safety_stock > 0 ? { background: '#fff2f0' } : {} })} />
 
       <Modal
         title={t('inventory.add_material')}

@@ -54,6 +54,7 @@
     "inventory": "Inventario",
     "materials": "Materiales",
     "products": "Productos",
+    "inventory_alerts": "Alertas",
     "quality": "Calidad",
     "inspections": "Inspecciones",
     "issues": "Incidencias",
@@ -223,6 +224,7 @@
   },
   "inventory": {
     "materials_title": "Materiales",
+    "alerts_title": "Alertas de Inventario",
     "search_materials": "Buscar materiales...",
     "add_material": "Agregar material",
     "material_added": "Material agregado",

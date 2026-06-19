@@ -60,6 +60,7 @@ const Sidebar = () => {
       children: [
         { key: '/inventory/materials', label: t('sidebar.materials') },
         { key: '/inventory/products', label: t('sidebar.products') },
+        { key: '/inventory/alerts', label: t('sidebar.inventory_alerts') },
       ],
     },
     {

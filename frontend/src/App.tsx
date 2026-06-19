@@ -13,6 +13,7 @@ import ProductionOrderList from './pages/production/OrderList';
 import ProductionOrderDetail from './pages/production/OrderDetail';
 import MaterialList from './pages/inventory/MaterialList';
 import ProductList from './pages/inventory/ProductList';
+import InventoryAlerts from './pages/inventory/InventoryAlerts';
 import InspectionList from './pages/quality/InspectionList';
 import IssueList from './pages/quality/IssueList';
 import DictList from './pages/system/DictList';
@@ -42,6 +43,7 @@ function App() {
         <Route path="production/orders/:id" element={<ProductionOrderDetail />} />
         <Route path="inventory/materials" element={<MaterialList />} />
         <Route path="inventory/products" element={<ProductList />} />
+        <Route path="inventory/alerts" element={<InventoryAlerts />} />
         <Route path="quality/inspections" element={<InspectionList />} />
         <Route path="quality/issues" element={<IssueList />} />
         <Route path="system/dict" element={<DictList />} />

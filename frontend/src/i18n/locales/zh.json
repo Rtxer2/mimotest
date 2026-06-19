@@ -54,6 +54,7 @@
     "inventory": "库存管理",
     "materials": "原材料",
     "products": "成品",
+    "inventory_alerts": "库存预警",
     "quality": "质量管理",
     "inspections": "质量检验",
     "issues": "质量问题",
@@ -223,6 +224,7 @@
   },
   "inventory": {
     "materials_title": "原材料管理",
+    "alerts_title": "库存预警",
     "search_materials": "搜索原材料...",
     "add_material": "添加原材料",
     "material_added": "原材料已添加",

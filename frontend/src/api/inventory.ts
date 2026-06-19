@@ -86,4 +86,7 @@ export const inventoryApi = {
 
   listTransactions: (params?: { item_type?: string; item_id?: number; skip?: number; limit?: number }) =>
     client.get<StockTransaction[]>('/inventory/transactions', { params }),
+
+  getAlerts: () =>
+    client.get<{ materials: Material[]; products: FinishedProduct[] }>('/inventory/alerts'),
 };
