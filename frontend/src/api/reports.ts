@@ -6,4 +6,10 @@ export const reportApi = {
       params: { type, format },
       responseType: 'blob',
     }),
+
+  exportOrder: (orderId: number, format: string) =>
+    client.get(`/reports/orders/${orderId}`, {
+      params: { format },
+      responseType: 'blob',
+    }),
 };

@@ -156,6 +156,75 @@ class ReportService:
         buf.seek(0)
         return buf
 
+    def export_single_order_xlsx(self, order_id: int):
+        from openpyxl import Workbook
+        order = self.db.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            raise ValueError("Order not found")
+        items = self.db.query(OrderItem).filter(OrderItem.order_id == order_id).all()
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "订单详情"
+        ws.append(["订单号", order.order_no])
+        ws.append(["客户ID", order.customer_id])
+        ws.append(["状态", order.status])
+        ws.append(["总金额", float(order.total_amount or 0)])
+        ws.append(["交货日期", str(order.delivery_date or "")])
+        ws.append(["备注", order.remarks or ""])
+        ws.append([])
+        ws.append(["产品名称", "数量", "单价", "规格"])
+        for item in items:
+            ws.append([item.product_name, item.quantity, float(item.unit_price or 0), item.specs or ""])
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        return buf
+
+    def export_single_order_pdf(self, order_id: int):
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet
+        order = self.db.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            raise ValueError("Order not found")
+        items = self.db.query(OrderItem).filter(OrderItem.order_id == order_id).all()
+        buf = io.BytesIO()
+        doc = SimpleDocTemplate(buf, pagesize=A4)
+        styles = getSampleStyleSheet()
+        elements = []
+        elements.append(Paragraph(f"Order: {order.order_no}", styles["Title"]))
+        elements.append(Spacer(1, 12))
+        info = [
+            ["Order No", order.order_no],
+            ["Customer ID", str(order.customer_id)],
+            ["Status", order.status],
+            ["Total Amount", str(float(order.total_amount or 0))],
+            ["Delivery Date", str(order.delivery_date or "")],
+            ["Remarks", order.remarks or ""],
+        ]
+        t = Table(info, colWidths=[120, 300])
+        t.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
+            ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(t)
+        elements.append(Spacer(1, 20))
+        elements.append(Paragraph("Order Items", styles["Heading2"]))
+        item_data = [["Product", "Quantity", "Unit Price", "Specs"]]
+        for item in items:
+            item_data.append([item.product_name, str(item.quantity), str(float(item.unit_price or 0)), item.specs or ""])
+        t2 = Table(item_data)
+        t2.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(t2)
+        doc.build(elements)
+        buf.seek(0)
+        return buf
+
     def export(self, report_type: str, format: str):
         method_name = f"export_{report_type}_{format}"
         method = getattr(self, method_name, None)

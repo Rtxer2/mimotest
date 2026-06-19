@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, Descriptions, Table, Tag, Select, Button, message, Popconfirm } from 'antd';
-import { SendOutlined } from '@ant-design/icons';
+import { Card, Descriptions, Table, Tag, Select, Button, message, Popconfirm, Space } from 'antd';
+import { SendOutlined, FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { orderApi, Order, OrderItem } from '../../api/orders';
 import { approvalApi } from '../../api/approvals';
+import { reportApi } from '../../api/reports';
 
 const statusOptions = ['pending', 'confirmed', 'in_production', 'completed', 'cancelled'];
 
@@ -78,6 +79,24 @@ const OrderDetail = () => {
     }
   };
 
+  const handleExport = async (format: string) => {
+    if (!id) return;
+    try {
+      const res = await reportApi.exportOrder(parseInt(id), format);
+      const blob = new Blob([res.data]);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `order_${id}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      message.error(t('reports.export_failed'));
+    }
+  };
+
   if (!order) return null;
 
   const itemColumns = [
@@ -96,11 +115,15 @@ const OrderDetail = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2>{t('orders.detail_title')}</h2>
-        {order.status === 'pending' && (
-          <Popconfirm title={t('orders.confirm_submit_approval')} onConfirm={handleSubmitApproval}>
-            <Button type="primary" icon={<SendOutlined />}>{t('orders.submit_approval')}</Button>
-          </Popconfirm>
-        )}
+        <Space>
+          <Button icon={<FileExcelOutlined />} onClick={() => handleExport('xlsx')}>{t('reports.excel')}</Button>
+          <Button icon={<FilePdfOutlined />} onClick={() => handleExport('pdf')}>{t('reports.pdf')}</Button>
+          {order.status === 'pending' && (
+            <Popconfirm title={t('orders.confirm_submit_approval')} onConfirm={handleSubmitApproval}>
+              <Button type="primary" icon={<SendOutlined />}>{t('orders.submit_approval')}</Button>
+            </Popconfirm>
+          )}
+        </Space>
       </div>
       <Card loading={loading}>
         <Descriptions bordered column={2}>
