@@ -9,6 +9,7 @@ import {
   SettingOutlined,
   BellOutlined,
   AuditOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -25,6 +26,11 @@ const Sidebar = () => {
       key: '/',
       icon: <DashboardOutlined />,
       label: 'Dashboard',
+    },
+    {
+      key: '/analytics',
+      icon: <BarChartOutlined />,
+      label: '数据大屏',
     },
     {
       key: '/customers',

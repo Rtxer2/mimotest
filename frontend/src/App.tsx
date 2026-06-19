@@ -22,6 +22,7 @@ import PendingList from './pages/approvals/PendingList';
 import InitiatedList from './pages/approvals/InitiatedList';
 import ApprovalDetail from './pages/approvals/ApprovalDetail';
 import FlowConfig from './pages/approvals/FlowConfig';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
+        <Route path="analytics" element={<AnalyticsDashboard />} />
         <Route path="customers" element={<CustomerList />} />
         <Route path="customers/:id" element={<CustomerDetail />} />
         <Route path="orders" element={<OrderList />} />
