@@ -1,7 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Tag, Space, Modal, Form, Input, Select, Switch, message, Popconfirm } from 'antd';
+import { Table, Button, Tag, Space, Modal, Form, Input, Select, InputNumber, Switch, message, Popconfirm } from 'antd';
 import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { approvalApi, ApprovalFlow } from '../../api/approvals';
+
+const conditionTypeOptions = [
+  { value: 'amount', label: '金额阈值' },
+  { value: 'quantity', label: '数量阈值' },
+  { value: 'always', label: '始终审批' },
+  { value: 'manual', label: '仅手动' },
+];
+
+const conditionTypeLabels: Record<string, string> = {
+  amount: '金额阈值',
+  quantity: '数量阈值',
+  always: '始终审批',
+  manual: '仅手动',
+};
 
 const FlowConfig = () => {
   const [flows, setFlows] = useState<ApprovalFlow[]>([]);
@@ -9,6 +23,7 @@ const FlowConfig = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingFlow, setEditingFlow] = useState<ApprovalFlow | null>(null);
   const [form] = Form.useForm();
+  const conditionType = Form.useWatch('condition_type', form);
 
   const loadFlows = async () => {
     setLoading(true);
@@ -16,7 +31,7 @@ const FlowConfig = () => {
       const res = await approvalApi.listFlows({ limit: 100 });
       setFlows(res.data);
     } catch (error) {
-      message.error('Failed to load flows');
+      message.error('加载流程失败');
     } finally {
       setLoading(false);
     }
@@ -27,60 +42,73 @@ const FlowConfig = () => {
   }, []);
 
   const handleSave = async (values: any) => {
+    const submitData = {
+      ...values,
+      trigger_condition: {
+        condition_type: values.condition_type,
+        threshold: values.threshold ?? 0,
+      },
+    };
+    delete submitData.condition_type;
+    delete submitData.threshold;
+
     try {
       if (editingFlow) {
-        await approvalApi.updateFlow(editingFlow.id, values);
-        message.success('Flow updated');
+        await approvalApi.updateFlow(editingFlow.id, submitData);
+        message.success('流程已更新');
       } else {
-        await approvalApi.createFlow(values);
-        message.success('Flow created');
+        await approvalApi.createFlow(submitData);
+        message.success('流程已创建');
       }
       setModalOpen(false);
       form.resetFields();
       setEditingFlow(null);
       loadFlows();
     } catch (error: any) {
-      message.error(error?.response?.data?.detail || 'Operation failed');
+      message.error(error?.response?.data?.detail || '操作失败');
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
       await approvalApi.deleteFlow(id);
-      message.success('Flow deleted');
+      message.success('流程已删除');
       loadFlows();
     } catch (error) {
-      message.error('Failed to delete flow');
+      message.error('删除失败');
     }
   };
 
   const openEdit = (flow: ApprovalFlow) => {
     setEditingFlow(flow);
+    const cond = flow.trigger_condition || {};
     form.setFieldsValue({
       name: flow.name,
       business_type: flow.business_type,
-      trigger_condition: JSON.stringify(flow.trigger_condition),
+      condition_type: cond.condition_type || 'manual',
+      threshold: cond.threshold,
       is_active: flow.is_active,
     });
     setModalOpen(true);
   };
 
+  const renderTriggerCondition = (condition: Record<string, any>) => {
+    if (!condition || !condition.condition_type) return '-';
+    const label = conditionTypeLabels[condition.condition_type] ?? condition.condition_type;
+    if (condition.threshold) {
+      return `${label} (>= ${condition.threshold})`;
+    }
+    return label;
+  };
+
   const columns = [
-    {
-      title: '流程名称',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: '业务类型',
-      dataIndex: 'business_type',
-      key: 'business_type',
-    },
+    { title: '流程名称', dataIndex: 'name', key: 'name' },
+    { title: '业务类型', dataIndex: 'business_type', key: 'business_type' },
     {
       title: '触发条件',
       dataIndex: 'trigger_condition',
       key: 'trigger_condition',
-      render: (condition: Record<string, any>) => JSON.stringify(condition),
+      render: renderTriggerCondition,
     },
     {
       title: '状态',
@@ -135,9 +163,14 @@ const FlowConfig = () => {
               ]}
             />
           </Form.Item>
-          <Form.Item name="trigger_condition" label="触发条件（JSON）">
-            <Input.TextArea rows={2} placeholder='{"min_amount": 10000}' />
+          <Form.Item name="condition_type" label="触发条件" rules={[{ required: true }]}>
+            <Select options={conditionTypeOptions} />
           </Form.Item>
+          {(conditionType === 'amount' || conditionType === 'quantity') && (
+            <Form.Item name="threshold" label={conditionType === 'amount' ? '金额阈值' : '数量阈值'} rules={[{ required: true }]}>
+              <InputNumber min={0} style={{ width: '100%' }} />
+            </Form.Item>
+          )}
           {editingFlow && (
             <Form.Item name="is_active" label="启用" valuePropName="checked">
               <Switch />
