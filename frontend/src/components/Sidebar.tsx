@@ -91,6 +91,7 @@ const Sidebar = () => {
       children: [
         ...(hasRole('admin') ? [{ key: '/system/users', label: 'User Management' }] : []),
         { key: '/system/dict', label: 'Data Dictionary' },
+        { key: '/system/dashboard-config', label: '仪表盘配置' },
       ],
     },
   ];
